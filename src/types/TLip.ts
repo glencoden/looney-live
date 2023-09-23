@@ -1,3 +1,5 @@
+import { LipStatus } from '../boss/enums/LipStatus.ts'
+
 export type TLip = {
     id: number
     sessionId: number
@@ -7,5 +9,5 @@ export type TLip = {
     name: string
     status: LipStatus
     message?: string
-    index?: number // for sorting in client lists
+    index: number // client extension for sorting
 }
