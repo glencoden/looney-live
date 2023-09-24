@@ -16,7 +16,15 @@ type StyledDropAreaProps = {
 
 const StyledWrapper = styled.div<StyledWrapperProps>`
     position: relative;
-    opacity: ${(props) => props.isDragging ? 0.5 : 1};
+    margin-bottom: -2px;
+    
+    ${(props) => props.isDragging ? `
+        opacity: 0.5;
+    
+        > * {
+            border: none !important;
+        }
+    ` : ''}
 `
 
 const StyledDropAreaTop = styled.div<StyledDropAreaProps>`
@@ -60,15 +68,30 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
         }),
     })
 
+    // eslint-disable-next-line
+    // @ts-ignore
     const [ dropBottomCollection, dropBottom ] = useDrop({
         accept: DragItemType.LIP,
-        drop: () => ({
-            status: item.status,
-            index: item.index + 1,
-        }),
-        collect: (monitor) => ({
-            isOver: monitor.isOver(),
-        }),
+        // eslint-disable-next-line
+        // @ts-ignore
+        drop: () => {
+            let index = item.index
+
+            if (dropBottomCollection.prevItem?.status !== item.status || dropBottomCollection.prevItem?.index > item.index) {
+                index++
+            }
+
+            return {
+                status: item.status,
+                index,
+            }
+        },
+        collect: (monitor) => {
+            return {
+                isOver: monitor.isOver(),
+                prevItem: monitor.getItem() as (TLip | undefined),
+            }
+        },
     })
 
     const [ dragCollection, drag ] = useDrag(() => ({
@@ -81,7 +104,7 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                 !dropResult ||
                 (
                     dropResult.status === item.status &&
-                    (dropResult.index === item.index || dropResult.index === item.index + 1)
+                    (dropResult.index === item.index)
                 )
             ) {
                 return
@@ -92,7 +115,7 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                     return prevItems
                 }
 
-                return prevItems.map((prevItem) => {
+                const result = prevItems.map((prevItem) => {
                     if (prevItem.id === item.id) {
                         return {
                             ...prevItem,
@@ -121,6 +144,11 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                         index,
                     }
                 })
+
+                console.log('dropResult', dropResult)
+                console.log('RESULT', JSON.stringify(result, null, 4))
+
+                return result
             })
         },
         collect: (monitor) => ({

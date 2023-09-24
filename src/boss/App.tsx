@@ -17,13 +17,14 @@ const filterItems = (items: TLip[], filter: LipStatus): TLip[] => {
 
 const START_FIELD_HEIGHT = 100
 
-
 const App: React.FC = () => {
     const [ items, setItems ] = useState([
         { id: 1, name: 'glen', status: LipStatus.IDLE, index: 0 },
         { id: 2, name: 'coden', status: LipStatus.IDLE, index: 1 },
-        { id: 3, name: 'shingle', status: LipStatus.STAGED, index: 0 },
+        { id: 3, name: 'shingle', status: LipStatus.IDLE, index: 2 },
     ] as unknown as TLip[])
+
+    // 'http://localhost:5555/live/test'
 
     return (
         <DndProvider backend={TouchBackend}>
@@ -85,28 +86,42 @@ const App: React.FC = () => {
 
                     {/* RIGHT */}
 
-                    <Box
-                        sx={{
-                            width: `${SONG_LIP_WIDTH + 32}px`,
-                            height: '100dvh',
-                            bgcolor: 'background.paper',
-                            overflow: 'scroll',
-                        }}
-                    >
-                        <DragTarget
-                            status={LipStatus.IDLE}
-                            items={items}
+                    <Box sx={{ width: `${SONG_LIP_WIDTH + 32}px`, height: '100dvh', bgcolor: 'background.paper' }}>
+                        <Box
+                            sx={{
+                                width: `${SONG_LIP_WIDTH + 32}px`,
+                                height: `${START_FIELD_HEIGHT}px`,
+                                bgcolor: 'background.paper',
+                            }}
                         >
-                            {filterItems(items, LipStatus.IDLE).map((item) => (
-                                <DragItem
-                                    key={item.id}
-                                    item={item}
-                                    setItems={setItems}
-                                >
-                                    <SongLip {...item} />
-                                </DragItem>
-                            ))}
-                        </DragTarget>
+
+                        </Box>
+
+                        <Divider sx={{ backgroundColor: 'white', borderColor: 'white' }} />
+
+                        <Box
+                            sx={{
+                                width: `${SONG_LIP_WIDTH + 32}px`,
+                                height: `calc(100dvh - ${START_FIELD_HEIGHT}px)`,
+                                bgcolor: 'background.paper',
+                                overflow: 'scroll',
+                            }}
+                        >
+                            <DragTarget
+                                status={LipStatus.IDLE}
+                                items={items}
+                            >
+                                {filterItems(items, LipStatus.IDLE).map((item) => (
+                                    <DragItem
+                                        key={item.id}
+                                        item={item}
+                                        setItems={setItems}
+                                    >
+                                        <SongLip {...item} />
+                                    </DragItem>
+                                ))}
+                            </DragTarget>
+                        </Box>
                     </Box>
 
                 </Box>
