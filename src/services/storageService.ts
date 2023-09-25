@@ -1,26 +1,24 @@
-import { editorService } from './editorService'
-import { getVideoGenres } from '../context/helpers/getVideoGenres'
-import { genreListStaleTime, minNumUnseenVideos } from '../variables'
+import { TJson } from '../types/TJson.ts'
+import { TLip } from '../types/TLip.ts'
 
 const STORAGE_KEYS = {
-    WATCHED_VIDEOS: 'BERTA.WATCHED_VIDEOS',
-    RECENT_GENRES: 'BERTA.RECENT_GENRES',
+    SESSION_INDEXES: 'BERTA.SESSION_INDEXES',
 }
 
 class StorageService {
-    _get(key) {
+    _get(key: string) {
         return this._parse(localStorage.getItem(key))
     }
 
-    _set(key, value) {
+    _set(key: string, value: string | number | TJson) {
         return localStorage.setItem(key, this._stringify(value))
     }
 
-    _stringify(value) {
+    _stringify(value: string | number | TJson) {
         return JSON.stringify(value)
     }
 
-    _parse(value) {
+    _parse(value: string | null) {
         if (value === null) {
             return null
         }
@@ -33,51 +31,23 @@ class StorageService {
         return result
     }
 
-    getSeenVideoIds() {
-        return this._get(STORAGE_KEYS.WATCHED_VIDEOS)
+    getSessionIndexes(sessionId: number): { [key: string]: number } {
+        const sessionIndexes = this._get(STORAGE_KEYS.SESSION_INDEXES) || {}
+
+        return sessionIndexes[sessionId] || {}
     }
 
-    setSeenVideoIds(video) {
-        const maxNumStoredIds = editorService.getNumVideos() - minNumUnseenVideos
-        const currentSeenVideoIds = this.getSeenVideoIds()
-        const storageUpdate = [ video.id, ...(currentSeenVideoIds === null ? [] : currentSeenVideoIds) ].slice(0, maxNumStoredIds)
-        this._set(STORAGE_KEYS.WATCHED_VIDEOS, storageUpdate)
-    }
+    setSessionIndexes(sessionId: number, items: TLip[]): void {
+        const currentIndexes = items.reduce((result: { [key: string]: number }, item) => ({
+            ...result,
+            [item.id]: item.index,
+        }), {})
 
-    getRecentlyWatchedGenres() {
-        const storageValue = this._get(STORAGE_KEYS.RECENT_GENRES)
-        if (storageValue === null) {
-            return null
-        }
-        return storageValue.genreList
-    }
+        const sessionIndexes = this._get(STORAGE_KEYS.SESSION_INDEXES) || {}
 
-    setRecentlyWatchedGenres(video) {
-        if (!Array.isArray(video.tags)) {
-            return
-        }
-        const inputGenreList = getVideoGenres(video)
-        const currentStorage = this.getRecentlyWatchedGenres()
-        const currentTimestamp = Date.now()
-        if (currentStorage === null || (currentStorage.updatedAt + genreListStaleTime) < currentTimestamp) {
-            const storageUpdate = {
-                updatedAt: currentTimestamp,
-                genreList: inputGenreList,
-            }
-            this._set(STORAGE_KEYS.RECENT_GENRES, storageUpdate)
-            return
-        }
-        const genreListUpdate = [ ...currentStorage ]
-        inputGenreList.forEach((genre) => {
-            if (!genreListUpdate.includes(genre)) {
-                genreListUpdate.push(genre)
-            }
-        })
-        const storageUpdate = {
-            updatedAt: currentTimestamp,
-            genreList: genreListUpdate,
-        }
-        this._set(STORAGE_KEYS.RECENT_GENRES, storageUpdate)
+        sessionIndexes[sessionId] = currentIndexes
+
+        this._set(STORAGE_KEYS.SESSION_INDEXES, sessionIndexes)
     }
 }
 
