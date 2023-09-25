@@ -1,4 +1,6 @@
-function encodeURI(data) {
+import { TJson } from '../types/TJson.ts'
+
+function encodeURI(data: TJson) {
     const formBody = []
     for (const key in data) {
         const encodedKey = encodeURIComponent(key)
@@ -8,44 +10,54 @@ function encodeURI(data) {
     return formBody.join('&')
 }
 
+const TOKEN_EXPIRY_SAFETY_MARGIN = 60 // seconds
 
 class RequestService {
     baseUrl = ''
-    oAuth2_access_token = ''
-    tokenExpiryDate = null
+    oAuth2_access_token: string | null = null
+    tokenExpiryDate: Date | null = null
 
     constructor() {
-        switch (process.env.REACT_APP_HOST_ENV) {
-            case 'develop':
-                this.baseUrl = 'http://tsc.lan'
-                break
-            case 'staging':
-                this.baseUrl = ''
-                break
-            case 'prod':
-                this.baseUrl = ''
-                break
-            default:
-                this.baseUrl = 'http://localhost:5555'
+        if (import.meta.env.DEV) {
+            this.baseUrl = 'http://localhost:5555'
+        } else {
+            switch (import.meta.env.VITE_HOST_ENV) {
+                case 'develop':
+                    this.baseUrl = 'http://looneyapi.lan'
+                    break
+                case 'staging':
+                    this.baseUrl = 'https://staging.api.looneytunez.de'
+                    break
+                case 'prod':
+                    this.baseUrl = 'https://api.looneytunez.de'
+                    break
+            }
         }
     }
 
-    get(url) {
-        const headers = { 'Content-Type': 'application/json; charset=utf-8' }
-        if (this.oAuth2_access_token) {
+    isLoggedIn() {
+        return this.oAuth2_access_token !== null && new Date() < this.tokenExpiryDate!
+    }
+
+    _get(url: string) {
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
+
+        if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
         }
+
         return Promise.resolve()
             .then(() => fetch(url, { method: 'GET', headers }))
             .then(resp => resp.json())
-            .catch(err => console.error('Request Service: ', err))
     }
 
-    post(url, data) {
-        const headers = { 'Content-Type': 'application/json; charset=utf-8' }
-        if (this.oAuth2_access_token) {
+    _post(url: string, data: TJson) {
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
+
+        if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
         }
+
         return Promise.resolve()
             .then(() => JSON.stringify(data))
             .then(body => fetch(url, {
@@ -54,14 +66,15 @@ class RequestService {
                 body,
             }))
             .then(resp => resp.json())
-            .catch(err => console.error('Request Service: ', err))
     }
 
-    put(url, data) {
-        const headers = { 'Content-Type': 'application/json; charset=utf-8' }
-        if (this.oAuth2_access_token) {
+    _put(url: string, data: TJson) {
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
+
+        if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
         }
+
         return Promise.resolve()
             .then(() => JSON.stringify(data))
             .then(body => fetch(url, {
@@ -70,21 +83,21 @@ class RequestService {
                 body,
             }))
             .then(resp => resp.json())
-            .catch(err => console.error('Request Service: ', err))
     }
 
-    delete(url) {
-        const headers = { 'Content-Type': 'application/json; charset=utf-8' }
-        if (this.oAuth2_access_token) {
+    _delete(url: string) {
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
+
+        if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
         }
+
         return Promise.resolve()
             .then(() => fetch(url, { method: 'DELETE', headers }))
             .then(resp => resp.json())
-            .catch(err => console.error('Request Service: ', err))
     }
 
-    _postEncodeURI(url, data) {
+    _postEncodeURI(url: string, data: TJson) {
         return Promise.resolve()
             .then(() => encodeURI(data))
             .then(body => fetch(url, {
@@ -100,7 +113,9 @@ class RequestService {
             })
     }
 
-    login(username, password) {
+    // boss
+
+    login(username: string, password: string) {
         return this._postEncodeURI(`${this.baseUrl}/auth/login`, {
             username,
             password,
@@ -111,26 +126,21 @@ class RequestService {
             .then(resp => {
                 // set token and expiry time
                 this.oAuth2_access_token = resp.access_token
+
                 const expiryDate = new Date()
+
                 expiryDate.setSeconds(expiryDate.getSeconds() + resp.expires_in - TOKEN_EXPIRY_SAFETY_MARGIN)
+
                 this.tokenExpiryDate = expiryDate
 
-                // clear database cache of deleted events and competitors older than stale time (server variable)
-                this.get(`${this.baseUrl}/api/clear_database`)
-                    .then(resp => {
-                        if (!resp?.success) {
-                            console.warn('error trying to clear database cache')
-                        }
-                    })
-
-                return {
-                    success: true,
-                }
+                return true
             })
     }
 
-    isAuthTokenValid() {
-        return new Date() < this.tokenExpiryDate
+    logout() {
+        this.oAuth2_access_token = null
+
+        return true
     }
 }
 

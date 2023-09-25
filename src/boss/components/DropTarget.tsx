@@ -70,14 +70,14 @@ const getTitleByStatus = (status: LipStatus): string => {
         case LipStatus.STAGED:
             return 'Ausgewählte Songlips'
         case LipStatus.LIVE:
-            return 'Action!'
+            return 'Go!'
         case LipStatus.DONE:
             return 'Fertig'
     }
 }
 
-const DragTarget: React.FC<Props> = ({ status, children }) => {
-    const [ collection, drop ] = useDrop(() => ({
+const DropTarget: React.FC<Props> = ({ status, children }) => {
+    const [ collection, dropRef ] = useDrop(() => ({
         accept: DragItemType.LIP,
         drop: (_, monitor) => {
             if (!monitor.isOver({ shallow: true })) {
@@ -97,7 +97,7 @@ const DragTarget: React.FC<Props> = ({ status, children }) => {
     return (
         <List sx={{ height: '100%' }}>
             <StyledItems
-                ref={drop}
+                ref={dropRef}
                 status={status}
                 isOver={collection.isOver}
                 isOverShallow={collection.isOverShallow}
@@ -116,4 +116,4 @@ const DragTarget: React.FC<Props> = ({ status, children }) => {
     )
 }
 
-export default DragTarget
+export default DropTarget

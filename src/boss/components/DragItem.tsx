@@ -57,7 +57,7 @@ const StyledDropBelowArea = styled.div<StyledDropAreaProps>`
 `
 
 const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
-    const [ dropAboveCollection, dropAbove ] = useDrop({
+    const [ dropAboveCollection, dropAboveRef ] = useDrop({
         accept: DragItemType.LIP,
         drop: () => ({
             status: item.status,
@@ -68,7 +68,7 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
         }),
     }, [ item ])
 
-    const [ dropBelowCollection, dropBelow ] = useDrop({
+    const [ dropBelowCollection, dropBelowRef ] = useDrop({
         accept: DragItemType.LIP,
         drop: () => ({
             status: item.status,
@@ -82,7 +82,7 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
         },
     }, [ item ])
 
-    const [ dragCollection, drag ] = useDrag(() => ({
+    const [ dragCollection, dragRef ] = useDrag(() => ({
         type: DragItemType.LIP,
         item,
         end: (item, monitor) => {
@@ -158,7 +158,7 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
 
     return (
         <StyledWrapper
-            ref={drag}
+            ref={dragRef}
             isDragging={dragCollection.isDragging}
         >
             <ListItem>
@@ -166,11 +166,12 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
             </ListItem>
 
             <StyledDropAboveArea
-                ref={dropAbove}
+                ref={dropAboveRef}
                 isOver={dropAboveCollection.isOver}
             />
+
             <StyledDropBelowArea
-                ref={dropBelow}
+                ref={dropBelowRef}
                 isOver={dropBelowCollection.isOver}
             />
         </StyledWrapper>
