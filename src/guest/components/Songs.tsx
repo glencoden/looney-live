@@ -1,37 +1,36 @@
-import Button from '@mui/material/Button'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
 import Typography from '@mui/material/Typography'
-import React, { useCallback } from 'react'
-import { TLip } from '../../types/TLip.ts'
+import React from 'react'
 import { TSong } from '../../types/TSong.ts'
 
 type Props = {
     songs: TSong[]
-    onSonglipCreated: (lip: TLip) => void
+    onSongSelect: React.Dispatch<React.SetStateAction<TSong | null>>
 }
 
-const Songs: React.FC<Props> = ({ songs, onSonglipCreated }) => {
-    const onSongSelect = useCallback((song: TSong) => {
-        console.log('song selected', song)
-        // TODO: create songlip with overlay inputs
-    }, [ onSonglipCreated ])
-
+const Songs: React.FC<Props> = ({ songs, onSongSelect }) => {
     return (
         <div>
             <Typography
                 variant="h5"
-                sx={{ padding: 3 }}
+                sx={{ padding: 3, paddingLeft: 2 }}
             >
                 Wähle einen Songs aus
             </Typography>
 
-            {songs.map((song) => (
-                <Button
-                    key={song.id}
-                    onClick={() => onSongSelect(song)}
-                >
-                    {`${song.artist} - ${song.title}`}
-                </Button>
-            ))}
+            <List>
+                {songs.map((song) => (
+                    <ListItem
+                        key={song.id}
+                        onClick={() => onSongSelect(song)}
+                    >
+                        <Typography>
+                            {`${song.artist} - ${song.title}`}
+                        </Typography>
+                    </ListItem>
+                ))}
+            </List>
         </div>
     )
 }

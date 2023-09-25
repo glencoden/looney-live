@@ -80,16 +80,16 @@ const SessionPicker: React.FC<Props> = ({ onSelect }) => {
                                 {session.title}
                             </Button>
                         ))}
+
+                        <Divider />
                     </>
                 )}
-
-                <Divider />
 
                 <Typography variant="h5">Neue Session erstellen</Typography>
 
                 <TextField
                     fullWidth
-                    label="Name"
+                    label="Titel"
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
                 />

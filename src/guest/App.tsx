@@ -7,6 +7,7 @@ import { requestService } from '../services/requestService.ts'
 import { storageService } from '../services/storageService.ts'
 import { TLip } from '../types/TLip.ts'
 import { TSong } from '../types/TSong.ts'
+import LipEditor from './components/LipEditor.tsx'
 import Lips from './components/Lips.tsx'
 import Songs from './components/Songs.tsx'
 
@@ -14,9 +15,10 @@ const App: React.FC = () => {
     const [ sessionId, setSessionId ] = useState<number | null>(null)
     const [ songs, setSongs ] = useState<TSong[] | null>()
     const [ lips, setLips ] = useState<TLip[] | null>(null)
+
     const [ activeTab, setActiveTab ] = useState(0)
 
-    // TODO: connect to socket to receive lip status updates
+    const [ selectedSong, setSelectedSong ] = useState<TSong | null>(null)
 
     useEffect(() => {
         const guestGuid = storageService.getGuestGuid()
@@ -35,10 +37,15 @@ const App: React.FC = () => {
             })
     }, [ setSessionId, setSongs, setLips ])
 
-    const onSonglipCreated = useCallback((lip: TLip) => {
-        setLips((prevLips) => [ ...(prevLips ?? []), lip ])
-        setActiveTab(1)
-    }, [ setLips, setActiveTab ])
+    // TODO: connect to socket to receive lip status updates
+
+    const onLipEdited = useCallback((lip: TLip | null) => {
+        if (lip !== null) {
+            setLips((prevLips) => [ ...(prevLips ?? []), lip ]) // TODO: add edit functionality
+            setActiveTab(1)
+        }
+        setSelectedSong(null)
+    }, [ setLips, setActiveTab, setSelectedSong ])
 
     if (sessionId === null) {
         return (
@@ -53,6 +60,15 @@ const App: React.FC = () => {
             >
                 <Typography variant="h5">Die Session läuft noch nicht</Typography>
             </Box>
+        )
+    }
+
+    if (selectedSong !== null) {
+        return (
+            <LipEditor
+                song={selectedSong}
+                onLipEdited={onLipEdited}
+            />
         )
     }
 
@@ -80,7 +96,7 @@ const App: React.FC = () => {
                 {activeTab === 0 && (
                     <Songs
                         songs={songs ?? []}
-                        onSonglipCreated={onSonglipCreated}
+                        onSongSelect={setSelectedSong}
                     />
                 )}
 

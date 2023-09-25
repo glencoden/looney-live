@@ -8,6 +8,6 @@ export type TLip = {
     date: string
     name: string
     status: LipStatus
-    message?: string
+    message?: string | null
     index: number // client extension for sorting
 }

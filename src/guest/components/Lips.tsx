@@ -1,4 +1,6 @@
 import React from 'react'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
 import { TLip } from '../../types/TLip.ts'
 import SongLip from '../../ui/SongLip.tsx'
 
@@ -8,11 +10,13 @@ type Props = {
 
 const Lips: React.FC<Props> = ({ lips }) => {
     return (
-        <div>
+        <List>
             {lips.map((lip) => (
-                <SongLip key={lip.id} {...lip} />
+                <ListItem key={lip.id}>
+                    <SongLip {...lip} />
+                </ListItem>
             ))}
-        </div>
+        </List>
     )
 }
 
