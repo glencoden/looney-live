@@ -30,7 +30,6 @@ const SessionPicker: React.FC<Props> = ({ onSelect }) => {
     useEffect(() => {
         requestService.getSessions()
             .then((response) => {
-                console.log('sessions', response)
                 setSessions(response.data)
             })
     }, [ setSessions ])
@@ -38,7 +37,6 @@ const SessionPicker: React.FC<Props> = ({ onSelect }) => {
     useEffect(() => {
         requestService.getSetlists()
             .then((response) => {
-                console.log('setlistOptions', response)
                 setSetlistOptions(response.data.map((setlist: TJson) => ({ id: setlist.id, title: setlist.title })))
             })
     }, [ setSetlistOptions ])
@@ -53,7 +51,6 @@ const SessionPicker: React.FC<Props> = ({ onSelect }) => {
             title,
         })
             .then((response) => {
-                console.log(response)
                 onSelect(response.data)
             })
     }, [ setlistId, date, title, onSelect ])

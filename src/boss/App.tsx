@@ -25,13 +25,7 @@ const filterItems = (items: TLip[], filter: LipStatus): TLip[] => {
 const START_FIELD_HEIGHT = 100
 
 const App: React.FC = () => {
-    const [ items, setItems ] = useState([
-        { id: 1, name: 'glen', status: LipStatus.IDLE, index: 0 },
-        { id: 2, name: 'coden', status: LipStatus.IDLE, index: 1 },
-        { id: 3, name: 'shingle', status: LipStatus.IDLE, index: 2 },
-    ] as unknown as TLip[])
-
-    // 'http://localhost:5555/live/test'
+    const [ items, setItems ] = useState<TLip[]>([])
 
     const [ password, setPassword ] = useState('')
     const [ errorMessage, setErrorMessage ] = useState<string | null>(null)
@@ -74,6 +68,16 @@ const App: React.FC = () => {
 
         return () => clearTimeout(reference.timeoutId)
     }, [ setIsLoggedIn ])
+
+    useEffect(() => {
+        if (activeSession === null) {
+            return
+        }
+        requestService.startSession(activeSession.id)
+            .then((response) => {
+                setItems(response.data.lips)
+            })
+    }, [ activeSession ])
 
     if (!isLoggedIn) {
         return (

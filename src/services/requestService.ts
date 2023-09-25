@@ -1,4 +1,5 @@
 import { TJson } from '../types/TJson.ts'
+import { TLip } from '../types/TLip.ts'
 import { TSession } from '../types/TSession.ts'
 
 function encodeURI(data: TJson) {
@@ -154,6 +155,10 @@ class RequestService {
 
     createSession(session: Partial<TSession>) {
         return this._post(`${this.baseUrl}/live/sessions`, session)
+    }
+
+    startSession(id: number): Promise<{ data: { session: TSession, lips: TLip[], guests: string[] } }> {
+        return this._get(`${this.baseUrl}/live/sessions/${id}/start`)
     }
 }
 
