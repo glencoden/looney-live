@@ -1,4 +1,5 @@
 import { TJson } from '../types/TJson.ts'
+import { TSession } from '../types/TSession.ts'
 
 function encodeURI(data: TJson) {
     const formBody = []
@@ -141,6 +142,18 @@ class RequestService {
         this.oAuth2_access_token = null
 
         return true
+    }
+
+    getSessions(id?: number) {
+        return this._get(`${this.baseUrl}/live/sessions${id ? `/${id}` : ''}`)
+    }
+
+    getSetlists() {
+        return this._get(`${this.baseUrl}/repertoire/setlist`)
+    }
+
+    createSession(session: Partial<TSession>) {
+        return this._post(`${this.baseUrl}/live/sessions`, session)
     }
 }
 

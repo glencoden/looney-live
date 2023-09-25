@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { ListItem } from '@mui/material'
+import ListItem from '@mui/material/ListItem'
 import React from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { TLip } from '../../types/TLip.ts'

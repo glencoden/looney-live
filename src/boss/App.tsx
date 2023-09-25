@@ -9,9 +9,11 @@ import { DndProvider } from 'react-dnd'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { requestService } from '../services/requestService.ts'
 import { TLip } from '../types/TLip.ts'
+import { TSession } from '../types/TSession.ts'
 import SongLip, { SONG_LIP_WIDTH } from '../ui/SongLip.tsx'
 import DragItem from './components/DragItem.tsx'
 import DropTarget from './components/DropTarget.tsx'
+import SessionPicker from './components/SessionPicker.tsx'
 import { LipStatus } from './enums/LipStatus.ts'
 
 const filterItems = (items: TLip[], filter: LipStatus): TLip[] => {
@@ -34,6 +36,7 @@ const App: React.FC = () => {
     const [ password, setPassword ] = useState('')
     const [ errorMessage, setErrorMessage ] = useState<string | null>(null)
     const [ isLoggedIn, setIsLoggedIn ] = useState(false)
+    const [ activeSession, setActiveSession ] = useState<TSession | null>(null)
 
     const onLogin = useCallback((pw: string) => {
         setErrorMessage(null)
@@ -89,7 +92,6 @@ const App: React.FC = () => {
                 autoComplete="off"
             >
                 <TextField
-                    id="outlined-error"
                     label="Passwort"
                     type="password"
                     autoFocus={true}
@@ -107,6 +109,10 @@ const App: React.FC = () => {
                 </Button>
             </Box>
         )
+    }
+
+    if (activeSession === null) {
+        return <SessionPicker onSelect={setActiveSession} />
     }
 
     return (

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useDrop } from 'react-dnd'
-import { List, Typography } from '@mui/material'
+import List from '@mui/material/List'
+import Typography from '@mui/material/Typography'
 import styled from '@emotion/styled'
 import { DragItemType } from '../enums/DragItemType.ts'
 import { LipStatus } from '../enums/LipStatus.ts'
