@@ -14,37 +14,6 @@ type StyledDropAreaProps = {
     isOver: boolean
 }
 
-const StyledWrapper = styled.div<StyledWrapperProps>`
-    position: relative;
-    margin-bottom: -2px;
-    
-    ${(props) => props.isDragging ? `
-        opacity: 0.5;
-    
-        > * {
-            border: none !important;
-        }
-    ` : ''}
-`
-
-const StyledDropAreaTop = styled.div<StyledDropAreaProps>`
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 50%;
-    border-top: ${(props) => props.isOver ? '2px solid blue' : '2px solid transparent'};
-`
-
-const StyledDropAreaBottom = styled.div<StyledDropAreaProps>`
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 50%;
-    border-bottom: ${(props) => props.isOver ? '2px solid blue' : '2px solid transparent'};
-`
-
 type Props = {
     item: TLip
     setItems: React.Dispatch<React.SetStateAction<TLip[]>>
@@ -56,8 +25,39 @@ type DropResult = {
     index: number
 } | undefined
 
+const StyledWrapper = styled.div<StyledWrapperProps>`
+    position: relative;
+    margin-bottom: -2px;
+
+    ${(props) => props.isDragging ? `
+        opacity: 0.5;
+    
+        > * {
+            border: none !important;
+        }
+    ` : ''}
+`
+
+const StyledDropAboveArea = styled.div<StyledDropAreaProps>`
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 50%;
+    border-top: ${(props) => props.isOver ? '2px solid blue' : '2px solid transparent'};
+`
+
+const StyledDropBelowArea = styled.div<StyledDropAreaProps>`
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 50%;
+    border-bottom: ${(props) => props.isOver ? '2px solid blue' : '2px solid transparent'};
+`
+
 const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
-    const [ dropTopCollection, dropTop ] = useDrop({
+    const [ dropAboveCollection, dropAbove ] = useDrop({
         accept: DragItemType.LIP,
         drop: () => ({
             status: item.status,
@@ -66,33 +66,21 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
         collect: (monitor) => ({
             isOver: monitor.isOver(),
         }),
-    })
+    }, [ item ])
 
-    // eslint-disable-next-line
-    // @ts-ignore
-    const [ dropBottomCollection, dropBottom ] = useDrop({
+    const [ dropBelowCollection, dropBelow ] = useDrop({
         accept: DragItemType.LIP,
-        // eslint-disable-next-line
-        // @ts-ignore
-        drop: () => {
-            let index = item.index
-
-            if (dropBottomCollection.prevItem?.status !== item.status || dropBottomCollection.prevItem?.index > item.index) {
-                index++
-            }
-
-            return {
-                status: item.status,
-                index,
-            }
-        },
+        drop: () => ({
+            status: item.status,
+            index: item.index + 1,
+        }),
         collect: (monitor) => {
             return {
                 isOver: monitor.isOver(),
                 prevItem: monitor.getItem() as (TLip | undefined),
             }
         },
-    })
+    }, [ item ])
 
     const [ dragCollection, drag ] = useDrag(() => ({
         type: DragItemType.LIP,
@@ -110,51 +98,58 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                 return
             }
 
-            setItems((prevItems) => {
-                if (prevItems.findIndex((prevItem) => prevItem.status === LipStatus.LIVE) > -1 && dropResult.status === LipStatus.LIVE) {
-                    return prevItems
+            const dragIndex = item.index
+            const dragStatus = item.status
+
+            const dropIndex = dropResult.index
+            const dropStatus = dropResult.status
+
+            setItems((currentItems) => {
+                if (dropStatus === LipStatus.LIVE && currentItems.findIndex((currentItem) => currentItem.status === LipStatus.LIVE) > -1) {
+                    return currentItems
                 }
 
-                const result = prevItems.map((prevItem) => {
-                    if (prevItem.id === item.id) {
+                return currentItems.map((currentItem) => {
+                    const currentIndex = currentItem.index
+                    const currentStatus = currentItem.status
+
+                    const isDragItem = currentItem.id === item.id
+
+                    if (isDragItem) {
+                        let index = dropIndex
+
+                        if (dropStatus === dragStatus && dragIndex < dropIndex) {
+                            index--
+                        }
+
                         return {
-                            ...prevItem,
-                            status: dropResult.status,
-                            index: dropResult.index,
+                            ...currentItem,
+                            index,
+                            status: dropStatus,
                         }
                     }
 
-                    let index = prevItem.index
+                    let index = currentIndex
 
-                    // Current item is in the changed list and follows the updated item
-                    if (prevItem.status === dropResult.status && prevItem.index >= dropResult.index) {
-                        index++
-
-                        // Updated item is also in the changed list and the current item is at or beyond its previous position
-                        if (item.status === dropResult.status && prevItem.index >= item.index) {
-                            index--
-                        }
-                        // Current item is in the list from which the updated item was removed and is at or beyond its previous position
-                    } else if (prevItem.status === item.status && prevItem.index >= item.index) {
+                    if (currentStatus === dragStatus && currentIndex > dragIndex) {
                         index--
                     }
 
+                    if (currentStatus === dropStatus && currentIndex >= dropIndex) {
+                        index++
+                    }
+
                     return {
-                        ...prevItem,
+                        ...currentItem,
                         index,
                     }
                 })
-
-                console.log('dropResult', dropResult)
-                console.log('RESULT', JSON.stringify(result, null, 4))
-
-                return result
             })
         },
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
         }),
-    }))
+    }), [ item ])
 
     return (
         <StyledWrapper
@@ -165,13 +160,13 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                 {children}
             </ListItem>
 
-            <StyledDropAreaTop
-                ref={dropTop}
-                isOver={dropTopCollection.isOver}
+            <StyledDropAboveArea
+                ref={dropAbove}
+                isOver={dropAboveCollection.isOver}
             />
-            <StyledDropAreaBottom
-                ref={dropBottom}
-                isOver={dropBottomCollection.isOver}
+            <StyledDropBelowArea
+                ref={dropBelow}
+                isOver={dropBelowCollection.isOver}
             />
         </StyledWrapper>
     )

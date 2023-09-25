@@ -15,12 +15,18 @@ type StyledPlaceholderProps = {
     status: LipStatus
 }
 
+type Props = {
+    status: LipStatus
+    items: TLip[]
+    children?: React.ReactNode
+}
+
 const StyledItems = styled.div<StyledItemsProps>`
     position: relative;
     height: 100%;
     border-radius: 4px;
     background-color: ${(props) => props.isOver ? 'whitesmoke' : 'transparent'};
-    
+
     ${(props) => props.isOverShallow ? `
         > *:last-child > li::after {
             content: '';
@@ -57,12 +63,6 @@ const getTitleByStatus = (status: LipStatus): string => {
         default:
             return 'unsupported status'
     }
-}
-
-type Props = {
-    status: LipStatus
-    items: TLip[]
-    children?: React.ReactNode
 }
 
 const DragTarget: React.FC<Props> = ({ status, items, children }) => {
