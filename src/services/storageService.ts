@@ -2,7 +2,8 @@ import { TJson } from '../types/TJson.ts'
 import { TLip } from '../types/TLip.ts'
 
 const STORAGE_KEYS = {
-    SESSION_INDEXES: 'BERTA.SESSION_INDEXES',
+    SESSION_INDEXES: 'LOONEY.SESSION_INDEXES',
+    GUEST_GUID: 'LOONEY.GUEST_GUID',
 }
 
 class StorageService {
@@ -48,6 +49,14 @@ class StorageService {
         sessionIndexes[sessionId] = currentIndexes
 
         this._set(STORAGE_KEYS.SESSION_INDEXES, sessionIndexes)
+    }
+
+    getGuestGuid(): string {
+        return this._get(STORAGE_KEYS.GUEST_GUID) || ''
+    }
+
+    setGuestGuid(guid: string): void {
+        this._set(STORAGE_KEYS.GUEST_GUID, guid)
     }
 }
 

@@ -1,3 +1,4 @@
+import { TGuestData } from '../types/TGuestData.ts'
 import { TJson } from '../types/TJson.ts'
 import { TLip } from '../types/TLip.ts'
 import { TSession } from '../types/TSession.ts'
@@ -159,6 +160,12 @@ class RequestService {
 
     startSession(id: number): Promise<{ data: { session: TSession, lips: TLip[], guests: string[] } }> {
         return this._get(`${this.baseUrl}/live/sessions/${id}/start`)
+    }
+
+    // guest
+
+    getGuestData = (guestGuid: string): Promise<{ success: boolean, message?: string, data?: TGuestData }> => {
+        return this._get(`${this.baseUrl}/live/guest${guestGuid ? `/${guestGuid}` : ''}`)
     }
 }
 
