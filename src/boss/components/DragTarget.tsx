@@ -1,12 +1,12 @@
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { useDrop } from 'react-dnd'
 import { List, Typography } from '@mui/material'
 import styled from '@emotion/styled'
-import { TLip } from '../../types/TLip.ts'
 import { DragItemType } from '../enums/DragItemType.ts'
 import { LipStatus } from '../enums/LipStatus.ts'
 
 type StyledItemsProps = {
+    status: LipStatus
     isOver: boolean
     isOverShallow: boolean
 }
@@ -17,7 +17,6 @@ type StyledPlaceholderProps = {
 
 type Props = {
     status: LipStatus
-    items: TLip[]
     children?: React.ReactNode
 }
 
@@ -25,7 +24,7 @@ const StyledItems = styled.div<StyledItemsProps>`
     position: relative;
     height: 100%;
     border-radius: 4px;
-    background-color: ${(props) => props.isOver ? 'whitesmoke' : 'transparent'};
+    background-color: ${(props) => props.isOver ? getHoverColorByStatus(props.status) : 'transparent'};
 
     ${(props) => props.isOverShallow ? `
         > *:last-child > li::after {
@@ -48,48 +47,58 @@ const StyledPlaceholder = styled.div<StyledPlaceholderProps>`
     opacity: 0.5;
 `
 
-const getNumItems = (items: TLip[], status: LipStatus): number => {
-    return items.filter((item) => item.status === status).length
+const getHoverColorByStatus = (status: LipStatus): string => {
+    switch (status) {
+        case LipStatus.DELETED:
+            return 'red'
+        case LipStatus.IDLE:
+        case LipStatus.STAGED:
+            return 'whitesmoke'
+        case LipStatus.LIVE:
+            return 'deeppink'
+        case LipStatus.DONE:
+            return 'blue'
+    }
 }
 
 const getTitleByStatus = (status: LipStatus): string => {
     switch (status) {
+        case LipStatus.DELETED:
+            return 'Löschen'
         case LipStatus.IDLE:
             return 'Neue Songlips'
         case LipStatus.STAGED:
             return 'Ausgewählte Songlips'
         case LipStatus.LIVE:
             return 'Action!'
-        default:
-            return 'unsupported status'
+        case LipStatus.DONE:
+            return 'Fertig'
     }
 }
 
-const DragTarget: React.FC<Props> = ({ status, items, children }) => {
-    const numItemsRef = useRef(getNumItems(items, status))
-
-    useEffect(() => {
-        numItemsRef.current = getNumItems(items, status)
-    }, [ status, items ])
-
+const DragTarget: React.FC<Props> = ({ status, children }) => {
     const [ collection, drop ] = useDrop(() => ({
         accept: DragItemType.LIP,
         drop: (_, monitor) => {
             if (!monitor.isOver({ shallow: true })) {
                 return
             }
-            return { status, index: numItemsRef.current }
+            return {
+                status,
+                index: Array.isArray(children) ? children.length : 0,
+            }
         },
         collect: (monitor) => ({
             isOver: monitor.isOver(),
             isOverShallow: monitor.isOver({ shallow: true }),
         }),
-    }))
+    }), [ children ])
 
     return (
         <List sx={{ height: '100%' }}>
             <StyledItems
                 ref={drop}
+                status={status}
                 isOver={collection.isOver}
                 isOverShallow={collection.isOverShallow}
             >

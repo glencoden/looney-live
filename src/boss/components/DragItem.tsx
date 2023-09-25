@@ -98,6 +98,11 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                 return
             }
 
+            if (dropResult.status === LipStatus.DELETED || dropResult.status === LipStatus.DONE) {
+                console.log('this works!', dropResult)
+                return
+            }
+
             const dragIndex = item.index
             const dragStatus = item.status
 

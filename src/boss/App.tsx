@@ -28,12 +28,19 @@ const App: React.FC = () => {
 
     return (
         <DndProvider backend={TouchBackend}>
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                <Box sx={{ width: '820px', display: 'flex', justifyContent: 'space-around' }}>
+            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+                <Box sx={{ width: '820px', display: 'flex', justifyContent: 'center' }}>
 
                     {/* LEFT */}
 
-                    <Box sx={{ width: `${SONG_LIP_WIDTH + 32}px`, height: '100dvh', bgcolor: 'background.paper' }}>
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            width: `${SONG_LIP_WIDTH + 32}px`,
+                            height: '100dvh',
+                            bgcolor: 'background.paper',
+                        }}
+                    >
                         <Box
                             sx={{
                                 width: `${SONG_LIP_WIDTH + 32}px`,
@@ -41,10 +48,7 @@ const App: React.FC = () => {
                                 bgcolor: 'background.paper',
                             }}
                         >
-                            <DragTarget
-                                status={LipStatus.LIVE}
-                                items={items}
-                            >
+                            <DragTarget status={LipStatus.LIVE}>
                                 {filterItems(items, LipStatus.LIVE).map((item) => (
                                     <DragItem
                                         key={item.id}
@@ -67,10 +71,7 @@ const App: React.FC = () => {
                                 overflow: 'scroll',
                             }}
                         >
-                            <DragTarget
-                                status={LipStatus.STAGED}
-                                items={items}
-                            >
+                            <DragTarget status={LipStatus.STAGED}>
                                 {filterItems(items, LipStatus.STAGED).map((item) => (
                                     <DragItem
                                         key={item.id}
@@ -82,11 +83,22 @@ const App: React.FC = () => {
                                 ))}
                             </DragTarget>
                         </Box>
+
+                        <Box sx={{ position: 'absolute', right: '100%', top: '0', width: '50vw', height: '100dvh' }}>
+                            <DragTarget status={LipStatus.DONE} />
+                        </Box>
                     </Box>
 
                     {/* RIGHT */}
 
-                    <Box sx={{ width: `${SONG_LIP_WIDTH + 32}px`, height: '100dvh', bgcolor: 'background.paper' }}>
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            width: `${SONG_LIP_WIDTH + 32}px`,
+                            height: '100dvh',
+                            bgcolor: 'background.paper',
+                        }}
+                    >
                         <Box
                             sx={{
                                 width: `${SONG_LIP_WIDTH + 32}px`,
@@ -107,10 +119,7 @@ const App: React.FC = () => {
                                 overflow: 'scroll',
                             }}
                         >
-                            <DragTarget
-                                status={LipStatus.IDLE}
-                                items={items}
-                            >
+                            <DragTarget status={LipStatus.IDLE}>
                                 {filterItems(items, LipStatus.IDLE).map((item) => (
                                     <DragItem
                                         key={item.id}
@@ -121,6 +130,10 @@ const App: React.FC = () => {
                                     </DragItem>
                                 ))}
                             </DragTarget>
+                        </Box>
+
+                        <Box sx={{ position: 'absolute', left: '100%', top: '0', width: '50vw', height: '100dvh' }}>
+                            <DragTarget status={LipStatus.DELETED} />
                         </Box>
                     </Box>
 
