@@ -1,8 +1,9 @@
+import Box from '@mui/material/Box'
+import Tab from '@mui/material/Tab'
+import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
 import React, { useCallback, useEffect, useState } from 'react'
-import Box from '@mui/material/Box'
-import Tabs from '@mui/material/Tabs'
-import Tab from '@mui/material/Tab'
+import { LipStatus } from '../boss/enums/LipStatus.ts'
 import { requestService } from '../services/requestService.ts'
 import { storageService } from '../services/storageService.ts'
 import { TLip } from '../types/TLip.ts'
@@ -37,7 +38,53 @@ const App: React.FC = () => {
             })
     }, [ setSessionId, setSongs, setLips ])
 
-    // TODO: connect to socket to receive lip status updates
+    useEffect(() => {
+        const socket = requestService.getSocket()
+
+        if (socket === null || sessionId === null) {
+            return
+        }
+
+        socket.emit('join', storageService.getGuestGuid())
+
+        socket.on('update-lip', (lip: TLip) => {
+            setLips((prevLips) => {
+                if (prevLips === null) {
+                    return null
+                }
+                const index = prevLips.findIndex((prevLip) => prevLip.id === lip.id)
+
+                if (index === -1) {
+                    return prevLips
+                }
+
+                if (lip.status === LipStatus.DONE) {
+                    return prevLips.filter((prevLip) => prevLip.id !== lip.id)
+                }
+
+                if (lip.status === LipStatus.LIVE) {
+                    // TODO: trigger stage call!
+                }
+                const update = [ ...prevLips ]
+
+                update[index] = lip
+
+                return update
+            })
+        })
+
+        socket.on('delete-lip', ({ data: TLip, message: string }) => {
+            setLips((prevLips) => {
+                if (prevLips === null) {
+                    return null
+                }
+
+                return prevLips.filter((prevLip) => prevLip.id !== data.id)
+            })
+
+            // TODO: prompt with message
+        })
+    }, [ sessionId, setLips ])
 
     const onLipEdited = useCallback((lip: TLip | null) => {
         if (lip !== null) {

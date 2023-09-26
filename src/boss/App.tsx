@@ -32,6 +32,18 @@ const App: React.FC = () => {
     const [ isLoggedIn, setIsLoggedIn ] = useState(false)
     const [ activeSession, setActiveSession ] = useState<TSession | null>(null)
 
+    useEffect(() => {
+        const socket = requestService.getSocket()
+
+        if (socket === null) {
+            return
+        }
+
+        socket.on('new-lip', (lip: TLip) => {
+            setItems((prevItems) => [ ...prevItems, lip ])
+        })
+    }, [setItems])
+
     const onLogin = useCallback((pw: string) => {
         setErrorMessage(null)
 

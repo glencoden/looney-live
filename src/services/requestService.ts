@@ -2,6 +2,7 @@ import { TGuestData } from '../types/TGuestData.ts'
 import { TJson } from '../types/TJson.ts'
 import { TLip } from '../types/TLip.ts'
 import { TSession } from '../types/TSession.ts'
+import { io, Socket } from "socket.io-client"
 
 function encodeURI(data: TJson) {
     const formBody = []
@@ -19,6 +20,7 @@ class RequestService {
     baseUrl = ''
     oAuth2_access_token: string | null = null
     tokenExpiryDate: Date | null = null
+    socket: Socket | null = null
 
     constructor() {
         if (import.meta.env.DEV) {
@@ -35,7 +37,17 @@ class RequestService {
                     this.baseUrl = 'https://api.looneytunez.de'
                     break
             }
+
+            this.socket = io(this.baseUrl)
         }
+    }
+
+    getSocket() {
+        if (this.socket === null) {
+            this.socket = io(this.baseUrl)
+
+        }
+        return this.socket
     }
 
     isLoggedIn() {
@@ -160,6 +172,14 @@ class RequestService {
 
     startSession(id: number): Promise<{ data: { session: TSession, lips: TLip[], guests: string[] } }> {
         return this._get(`${this.baseUrl}/live/sessions/${id}/start`)
+    }
+
+    updateLip(lip: Partial<TLip>) {
+        return this._put(`${this.baseUrl}/live/lips`, lip)
+    }
+
+    deleteLip(id: number, messageId: number) {
+        return this._delete(`${this.baseUrl}/live/lips/${id}/${messageId}`)
     }
 
     // guest

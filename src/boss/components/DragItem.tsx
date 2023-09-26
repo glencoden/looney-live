@@ -2,6 +2,7 @@ import styled from '@emotion/styled'
 import ListItem from '@mui/material/ListItem'
 import React from 'react'
 import { useDrag, useDrop } from 'react-dnd'
+import { requestService } from '../../services/requestService.ts'
 import { TLip } from '../../types/TLip.ts'
 import { DragItemType } from '../enums/DragItemType.ts'
 import { LipStatus } from '../enums/LipStatus.ts'
@@ -98,11 +99,6 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                 return
             }
 
-            if (dropResult.status === LipStatus.DELETED || dropResult.status === LipStatus.DONE) {
-                console.log('this works!', dropResult)
-                return
-            }
-
             const dragIndex = item.index
             const dragStatus = item.status
 
@@ -110,7 +106,10 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
             const dropStatus = dropResult.status
 
             setItems((currentItems) => {
-                if (dropStatus === LipStatus.LIVE && currentItems.findIndex((currentItem) => currentItem.status === LipStatus.LIVE) > -1) {
+                if (
+                    (dropStatus === LipStatus.LIVE && currentItems.findIndex((currentItem) => currentItem.status === LipStatus.LIVE) > -1) ||
+                    (dropStatus === LipStatus.DONE && dragStatus !== LipStatus.LIVE)
+                ) {
                     return currentItems
                 }
 
@@ -127,11 +126,23 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                             index--
                         }
 
-                        return {
+                        const update = {
                             ...currentItem,
                             index,
                             status: dropStatus,
                         }
+
+                            // TODO: handle loading status
+                        if (dropStatus === LipStatus.DELETED) {
+                            // TODO: defer deletion with message selection
+                            requestService.deleteLip(update.id, 0)
+                                .then(console.log)
+                        } else {
+                            requestService.updateLip(update)
+                                .then(console.log)
+                        }
+
+                        return update
                     }
 
                     let index = currentIndex
