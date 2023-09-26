@@ -73,13 +73,13 @@ const App: React.FC = () => {
             })
         })
 
-        socket.on('delete-lip', ({ data: TLip, message: string }) => {
+        socket.on('delete-lip', (params: { data: TLip, message: string }) => {
             setLips((prevLips) => {
                 if (prevLips === null) {
                     return null
                 }
 
-                return prevLips.filter((prevLip) => prevLip.id !== data.id)
+                return prevLips.filter((prevLip) => prevLip.id !== params.data.id)
             })
 
             // TODO: prompt with message
