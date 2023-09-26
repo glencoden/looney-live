@@ -7,6 +7,12 @@ import { TLip } from '../../types/TLip.ts'
 import { DragItemType } from '../enums/DragItemType.ts'
 import { LipStatus } from '../enums/LipStatus.ts'
 
+const DELETE_MESSAGES = {
+    TOO_OFTEN: 'Diesen Song haben wir heute schon zu oft gehört. Damit die Party abwechslungsreich bleibt, kommst du damit heute nicht dran.',
+    TOO_LATE: 'Es gibt so viele Anmeldungen vor dir, dass wir es heute leider nicht schaffen, dich mit diesem Song auf die Bühne zu holen.',
+    ERROR: 'Da stimmt doch was nicht, leider kannst du diesen Song heute nicht singen.',
+}
+
 type StyledWrapperProps = {
     isDragging: boolean
 }
@@ -106,6 +112,10 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
             const dropStatus = dropResult.status
 
             setItems((currentItems) => {
+                console.log('drag', dragIndex, dragStatus)
+                console.log('drop', dropIndex, dropStatus)
+                console.log('items', JSON.stringify(currentItems, null, 4))
+
                 if (
                     (dropStatus === LipStatus.LIVE && currentItems.findIndex((currentItem) => currentItem.status === LipStatus.LIVE) > -1) ||
                     (dropStatus === LipStatus.DONE && dragStatus !== LipStatus.LIVE)
@@ -132,10 +142,10 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                             status: dropStatus,
                         }
 
-                            // TODO: handle loading status
+                        // TODO: handle loading status
                         if (dropStatus === LipStatus.DELETED) {
                             // TODO: defer deletion with message selection
-                            requestService.deleteLip(update.id, 0)
+                            requestService.deleteLip(update.id, DELETE_MESSAGES.ERROR)
                                 .then(console.log)
                         } else {
                             requestService.updateLip(update)

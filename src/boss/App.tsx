@@ -7,6 +7,8 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import React, { useCallback, useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { TouchBackend } from 'react-dnd-touch-backend'
+import { SocketBossToServer } from '../enums/SocketBossToServer.ts'
+import { SocketServerToBoss } from '../enums/SocketServerToBoss.ts'
 import { requestService } from '../services/requestService.ts'
 import { TLip } from '../types/TLip.ts'
 import { TSession } from '../types/TSession.ts'
@@ -32,6 +34,8 @@ const App: React.FC = () => {
     const [ isLoggedIn, setIsLoggedIn ] = useState(false)
     const [ activeSession, setActiveSession ] = useState<TSession | null>(null)
 
+    // WEB SOCKET
+
     useEffect(() => {
         const socket = requestService.getSocket()
 
@@ -39,10 +43,26 @@ const App: React.FC = () => {
             return
         }
 
-        socket.on('new-lip', (lip: TLip) => {
+        socket.emit(SocketBossToServer.BOSS_JOIN)
+
+        socket.on(SocketServerToBoss.ADD_LIP, (lip: TLip) => {
             setItems((prevItems) => [ ...prevItems, lip ])
         })
-    }, [setItems])
+    }, [ setItems ])
+
+    // SESSION START
+
+    useEffect(() => {
+        if (activeSession === null) {
+            return
+        }
+        requestService.startSession(activeSession.id)
+            .then((response) => {
+                setItems(response.data.lips)
+            })
+    }, [ activeSession ])
+
+    // LOGIN
 
     const onLogin = useCallback((pw: string) => {
         setErrorMessage(null)
@@ -80,16 +100,6 @@ const App: React.FC = () => {
 
         return () => clearTimeout(reference.timeoutId)
     }, [ setIsLoggedIn ])
-
-    useEffect(() => {
-        if (activeSession === null) {
-            return
-        }
-        requestService.startSession(activeSession.id)
-            .then((response) => {
-                setItems(response.data.lips)
-            })
-    }, [ activeSession ])
 
     if (!isLoggedIn) {
         return (

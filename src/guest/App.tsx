@@ -4,6 +4,8 @@ import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
 import React, { useCallback, useEffect, useState } from 'react'
 import { LipStatus } from '../boss/enums/LipStatus.ts'
+import { SocketGuestToServer } from '../enums/SocketGuestToServer.ts'
+import { SocketServerToGuest } from '../enums/SocketServerToGuest.ts'
 import { requestService } from '../services/requestService.ts'
 import { storageService } from '../services/storageService.ts'
 import { TLip } from '../types/TLip.ts'
@@ -22,20 +24,39 @@ const App: React.FC = () => {
     const [ selectedSong, setSelectedSong ] = useState<TSong | null>(null)
 
     useEffect(() => {
-        const guestGuid = storageService.getGuestGuid()
+        const onSessionStart = () => {
+            const guestGuid = storageService.getGuestGuid()
 
-        requestService.getGuestData(guestGuid)
-            .then((response) => {
-                if (!response.success || !response.data) {
-                    console.log(response.message)
-                    return
-                }
-                storageService.setGuestGuid(response.data.guid)
+            requestService.getGuestData(guestGuid)
+                .then((response) => {
+                    if (!response.success || !response.data) {
+                        console.log(response.message)
+                        return
+                    }
+                    storageService.setGuestGuid(response.data.guid)
 
-                setSessionId(response.data.sessionId)
-                setSongs(response.data.songs)
-                setLips(response.data.lips)
-            })
+                    setSessionId(response.data.sessionId)
+                    setSongs(response.data.songs)
+                    setLips(response.data.lips)
+                })
+        }
+
+        onSessionStart()
+
+        // TODO: poll socket
+        const socket = requestService.getSocket()
+
+        if (socket === null) {
+            return
+        }
+
+        socket.on(SocketServerToGuest.SESSION_START, onSessionStart)
+
+        socket.on(SocketServerToGuest.SESSION_END, () => {
+            setSessionId(null)
+            setSongs(null)
+            setLips(null)
+        })
     }, [ setSessionId, setSongs, setLips ])
 
     useEffect(() => {
@@ -45,9 +66,9 @@ const App: React.FC = () => {
             return
         }
 
-        socket.emit('join', storageService.getGuestGuid())
+        socket.emit(SocketGuestToServer.GUEST_JOIN, storageService.getGuestGuid()) // connect guest guid to socket
 
-        socket.on('update-lip', (lip: TLip) => {
+        socket.on(SocketServerToGuest.UPDATE_LIP, (lip: TLip) => {
             setLips((prevLips) => {
                 if (prevLips === null) {
                     return null
@@ -73,16 +94,17 @@ const App: React.FC = () => {
             })
         })
 
-        socket.on('delete-lip', (params: { data: TLip, message: string }) => {
+        socket.on(SocketServerToGuest.DELETE_LIP, ({ data, message }: { data: TLip, message: string }) => {
             setLips((prevLips) => {
                 if (prevLips === null) {
                     return null
                 }
 
-                return prevLips.filter((prevLip) => prevLip.id !== params.data.id)
+                return prevLips.filter((prevLip) => prevLip.id !== data.id)
             })
 
             // TODO: prompt with message
+            console.log(message)
         })
     }, [ sessionId, setLips ])
 
@@ -105,7 +127,7 @@ const App: React.FC = () => {
                     alignItems: 'center',
                 }}
             >
-                <Typography variant="h5">Die Session läuft noch nicht</Typography>
+                <Typography variant="h5">Schön dass du dabei bist! Die Session fängt bald an.</Typography>
             </Box>
         )
     }

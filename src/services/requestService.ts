@@ -2,7 +2,7 @@ import { TGuestData } from '../types/TGuestData.ts'
 import { TJson } from '../types/TJson.ts'
 import { TLip } from '../types/TLip.ts'
 import { TSession } from '../types/TSession.ts'
-import { io, Socket } from "socket.io-client"
+import { io, Socket } from 'socket.io-client'
 
 function encodeURI(data: TJson) {
     const formBody = []
@@ -37,9 +37,8 @@ class RequestService {
                     this.baseUrl = 'https://api.looneytunez.de'
                     break
             }
-
-            this.socket = io(this.baseUrl)
         }
+        this.socket = io(this.baseUrl)
     }
 
     getSocket() {
@@ -178,8 +177,8 @@ class RequestService {
         return this._put(`${this.baseUrl}/live/lips`, lip)
     }
 
-    deleteLip(id: number, messageId: number) {
-        return this._delete(`${this.baseUrl}/live/lips/${id}/${messageId}`)
+    deleteLip(id: number, message: string) {
+        return this._delete(`${this.baseUrl}/live/lips/${id}${encodeURI({ message })}`)
     }
 
     // guest

@@ -23,6 +23,11 @@ const LipEditor: React.FC<Props> = ({ song, onLipEdited }) => {
     const [ name, setName ] = useState('')
 
     const onCreate = useCallback(() => {
+        // TODO: add error handling
+        if (!name) {
+            return
+        }
+
         requestService.createGuestLip(storageService.getGuestGuid(), song.id, name)
             .then((response) => {
                 onLipEdited(response.data)
@@ -51,6 +56,7 @@ const LipEditor: React.FC<Props> = ({ song, onLipEdited }) => {
                 </Typography>
 
                 <TextField
+                    autoFocus={true}
                     fullWidth
                     label="Name"
                     value={name}
