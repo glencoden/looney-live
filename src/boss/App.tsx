@@ -60,9 +60,21 @@ const App: React.FC = () => {
         if (activeSession === null) {
             return
         }
+        const indexes: { [status: string]: number } = {}
+
         requestService.startSession(activeSession.id)
             .then((response) => {
-                setItems(response.data.lips)
+                setItems(response.data.lips.map((lip) => {
+                    if (typeof indexes[lip.status] === 'undefined') {
+                        indexes[lip.status] = 0
+                    } else {
+                        indexes[lip.status] = indexes[lip.status] + 1
+                    }
+                    return {
+                        ...lip,
+                        index: indexes[lip.status],
+                    }
+                }))
             })
     }, [ activeSession ])
 
