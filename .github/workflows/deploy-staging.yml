@@ -17,6 +17,7 @@ jobs:
         run: npm run build
         env:
           VITE_BUILD_TYPE: boss
+          VITE_HOST_ENV: staging
       - name: copy ssh key
         run: |
           mkdir -p ~/.ssh
@@ -46,6 +47,7 @@ jobs:
         run: npm run build
         env:
           VITE_BUILD_TYPE: guest
+          VITE_HOST_ENV: staging
       - name: copy ssh key
         run: |
           mkdir -p ~/.ssh
