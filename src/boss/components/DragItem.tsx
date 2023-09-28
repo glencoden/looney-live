@@ -180,8 +180,11 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
     }), [ item ])
 
     return (
-        <StyledWrapper isDragging={dragCollection.isDragging}>
-            <ListItem ref={dragRef}>
+        <StyledWrapper
+            ref={dragRef}
+            isDragging={dragCollection.isDragging}
+        >
+            <ListItem>
                 {children}
             </ListItem>
 
