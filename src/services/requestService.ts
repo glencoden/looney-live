@@ -143,7 +143,7 @@ class RequestService {
 
                 const expiryDate = new Date()
 
-                expiryDate.setSeconds(expiryDate.getSeconds() + 75 - TOKEN_EXPIRY_SAFETY_MARGIN)
+                expiryDate.setSeconds(expiryDate.getSeconds() + resp.expires_in - TOKEN_EXPIRY_SAFETY_MARGIN)
 
                 this.tokenExpiryDate = expiryDate
 
