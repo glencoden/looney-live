@@ -64,6 +64,9 @@ const App: React.FC = () => {
     useEffect(() => {
         const socket = requestService.getSocket()
 
+        console.log('socket', socket)
+        console.log('sessionId', sessionId)
+
         if (socket === null || sessionId === null) {
             return
         }
