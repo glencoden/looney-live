@@ -162,7 +162,7 @@ class RequestService {
     }
 
     getSetlists() {
-        return this._get(`https://api.looneytunez.de/repertoire/setlist`) // TODO: revert to this.baseUrl
+        return this._get(`${this.baseUrl}/repertoire/setlist`)
     }
 
     createSession(session: Partial<TSession>) {
@@ -194,7 +194,7 @@ class RequestService {
     // shared
 
     getSong(id: number) {
-        return this._get(`https://api.looneytunez.de/repertoire/songs/${id}`) // TODO: revert to this.baseUrl
+        return this._get(`${this.baseUrl}/repertoire/songs/${id}`)
     }
 }
 
