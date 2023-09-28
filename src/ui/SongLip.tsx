@@ -1,18 +1,114 @@
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import Box from '@mui/material/Box'
+import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
-import React from 'react'
+import Divider from '@mui/material/Divider'
+import React, { useEffect, useState } from 'react'
+import { LipStatus } from '../boss/enums/LipStatus.ts'
+import { requestService } from '../services/requestService.ts'
 import { TLip } from '../types/TLip.ts'
+import { TSong } from '../types/TSong.ts'
+import formatDistance from 'date-fns/formatDistance'
+import { de } from 'date-fns/locale'
 
 export const SONG_LIP_WIDTH = 360
 
-const SongLip: React.FC<TLip> = ({ name }) => {
+const getTimeDistance = (date: string): string => {
+    return formatDistance(new Date(date), new Date(), { addSuffix: true, locale: de })
+}
+
+const SongLip: React.FC<TLip> = ({ songId, date, name, status, message }) => {
+    const [ timeDistance, setTimeDistance ] = useState(() => getTimeDistance(date))
+    const [ song, setSong ] = useState<TSong | null>(null)
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTimeDistance(getTimeDistance(date))
+        }, 1000)
+
+        return () => {
+            clearInterval(interval)
+        }
+    }, [ date, setTimeDistance ])
+
+    useEffect(() => {
+        requestService.getSong(songId)
+            .then((response) => {
+                setSong(response.data[0])
+            })
+    }, [ songId, setSong ])
+
+    const isGuestLiveCall = import.meta.env.VITE_BUILD_TYPE === 'guest' && status === LipStatus.LIVE
+
     return (
-        <Card sx={{ width: `${SONG_LIP_WIDTH}px` }}>
+        <Card sx={{ width: `${SONG_LIP_WIDTH}px`, border: isGuestLiveCall ? '2px solid deeppink' : 'none' }}>
             <CardContent>
-                <Typography>
-                    {name}
-                </Typography>
+                {song === null ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    <>
+                        {isGuestLiveCall && (
+                            <>
+                                <Typography
+                                    sx={{ marginBottom: 1, color: 'deeppink' }}
+                                    variant="h3"
+                                >
+                                    Du bist dran!</Typography>
+                                <Divider sx={{ marginBottom: 1 }} />
+                            </>
+                        )}
+
+                        {status === LipStatus.DELETED && (
+                            <>
+                                <Typography sx={{ marginBottom: 1 }} color="error">
+                                    Gelöscht
+                                </Typography>
+                                <Typography
+                                    sx={{ marginBottom: 1 }}
+                                    variant="body2"
+                                    color="error"
+                                >
+                                    {message}
+                                </Typography>
+                                <Divider sx={{ marginBottom: 1 }} />
+                            </>
+                        )}
+
+                        {status === LipStatus.DONE && (
+                            <>
+                                <Typography sx={{ marginBottom: 1 }}>
+                                    Das war stark!
+                                </Typography>
+                                <Typography
+                                    sx={{ marginBottom: 1 }}
+                                    variant="body2"
+                                >
+                                    Vielen Dank für deine heiße Performance, wir können es kaum abwarten, dich wieder auf der Bühne zu sehen.
+                                </Typography>
+                                <Divider sx={{ marginBottom: 1 }} />
+                            </>
+                        )}
+
+                        <Typography
+                            variant="caption"
+                            color="secondary"
+                            sx={{ float: 'right' }}
+                        >
+                            {timeDistance}
+                        </Typography>
+
+                        <Typography variant="overline">
+                            {name}
+                        </Typography>
+
+                        <Typography>
+                            {song.artist} - {song.title}
+                        </Typography>
+                    </>
+                )}
             </CardContent>
         </Card>
     )

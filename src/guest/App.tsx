@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { LipStatus } from '../boss/enums/LipStatus.ts'
 import { SocketGuestToServer } from '../enums/SocketGuestToServer.ts'
 import { SocketServerToGuest } from '../enums/SocketServerToGuest.ts'
+import useWakeLock from '../hooks/useWakeLock.ts'
 import { requestService } from '../services/requestService.ts'
 import { storageService } from '../services/storageService.ts'
 import { TLip } from '../types/TLip.ts'
@@ -22,6 +23,8 @@ const App: React.FC = () => {
     const [ activeTab, setActiveTab ] = useState(0)
 
     const [ selectedSong, setSelectedSong ] = useState<TSong | null>(null)
+
+    useWakeLock(1000 * 60 * 3)
 
     useEffect(() => {
         const onSessionStart = () => {
@@ -79,13 +82,10 @@ const App: React.FC = () => {
                     return prevLips
                 }
 
-                if (lip.status === LipStatus.DONE) {
-                    return prevLips.filter((prevLip) => prevLip.id !== lip.id)
-                }
-
                 if (lip.status === LipStatus.LIVE) {
                     // TODO: trigger stage call!
                 }
+
                 const update = [ ...prevLips ]
 
                 update[index] = lip
@@ -94,17 +94,23 @@ const App: React.FC = () => {
             })
         })
 
-        socket.on(SocketServerToGuest.DELETE_LIP, ({ data, message }: { data: TLip, message: string }) => {
+        socket.on(SocketServerToGuest.DELETE_LIP, (lip: TLip) => {
             setLips((prevLips) => {
                 if (prevLips === null) {
                     return null
                 }
+                const index = prevLips.findIndex((prevLip) => prevLip.id === lip.id)
 
-                return prevLips.filter((prevLip) => prevLip.id !== data.id)
+                if (index === -1) {
+                    return prevLips
+                }
+
+                const update = [ ...prevLips ]
+
+                update[index] = lip
+
+                return update
             })
-
-            // TODO: prompt with message
-            console.log(message)
         })
     }, [ sessionId, setLips ])
 
@@ -123,11 +129,15 @@ const App: React.FC = () => {
                     width: '100%',
                     height: '100dvh',
                     display: 'flex',
+                    flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    gap: 3,
+                    padding: 5,
                 }}
             >
-                <Typography variant="h5">Schön dass du dabei bist! Die Session fängt bald an.</Typography>
+                <Typography variant="h5">Schön dass du dabei bist!</Typography>
+                <Typography>Die Session fängt bald an.</Typography>
             </Box>
         )
     }
