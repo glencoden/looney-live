@@ -190,6 +190,12 @@ class RequestService {
     createGuestLip(guid: string, songId: number, name: string) {
         return this._post(`${this.baseUrl}/live/guest/${guid}`, { songId, name })
     }
+
+    // shared
+
+    getSong(id: number) {
+        return this._get(`${this.baseUrl}/repertoire/songs/${id}`)
+    }
 }
 
 export const requestService = new RequestService()
