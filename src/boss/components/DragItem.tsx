@@ -145,7 +145,10 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
                         // TODO: handle loading status
                         if (dropStatus === LipStatus.DELETED) {
                             // TODO: defer deletion with message selection
-                            requestService.deleteLip(update.id, DELETE_MESSAGES.TOO_LATE)
+                            requestService.updateLip({
+                                ...update,
+                                message: DELETE_MESSAGES.TOO_LATE
+                            })
                                 .then(console.log)
                         } else {
                             requestService.updateLip(update)
