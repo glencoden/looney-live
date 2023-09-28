@@ -58,6 +58,16 @@ const App: React.FC = () => {
                 },
             ])
         })
+
+        const onBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.returnValue = `Willst du die Seite wirklich verlassen?`
+        }
+
+        window.addEventListener('beforeunload', onBeforeUnload)
+
+        return () => {
+            window.removeEventListener('beforeunload', onBeforeUnload)
+        }
     }, [ setItems ])
 
     // SESSION START
