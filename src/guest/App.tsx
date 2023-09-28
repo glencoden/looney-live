@@ -64,9 +64,6 @@ const App: React.FC = () => {
     useEffect(() => {
         const socket = requestService.getSocket()
 
-        console.log('socket', socket)
-        console.log('sessionId', sessionId)
-
         if (socket === null || sessionId === null) {
             return
         }
@@ -74,8 +71,6 @@ const App: React.FC = () => {
         socket.emit(SocketGuestToServer.GUEST_JOIN, storageService.getGuestGuid()) // connect guest guid to socket
 
         socket.on(SocketServerToGuest.UPDATE_LIP, (lip: TLip) => {
-            console.log(SocketServerToGuest.UPDATE_LIP, lip)
-
             // TODO: trigger stage call!
 
             setLips((prevLips) => {
@@ -92,7 +87,7 @@ const App: React.FC = () => {
         })
 
         socket.on(SocketServerToGuest.DELETE_LIP, (lip: TLip) => {
-            console.log(SocketServerToGuest.DELETE_LIP, lip)
+            // TODO: remove this
 
             setLips((prevLips) => {
                 if (prevLips === null) {

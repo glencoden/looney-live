@@ -25,7 +25,7 @@ const filterItems = (items: TLip[], filter: LipStatus): TLip[] => {
         .sort((a, b) => a.index - b.index)
 }
 
-const START_FIELD_HEIGHT = 120
+const START_FIELD_HEIGHT = 124
 
 const App: React.FC = () => {
     const [ items, setItems ] = useState<TLip[]>([])
