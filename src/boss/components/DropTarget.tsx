@@ -65,7 +65,7 @@ const getHoverColorByStatus = (status: LipStatus): string => {
 const getTitleByStatus = (status: LipStatus): string => {
     switch (status) {
         case LipStatus.DELETED:
-            return 'Löschen'
+            return 'Gelöscht'
         case LipStatus.IDLE:
             return 'Neue Songlips'
         case LipStatus.STAGED:
