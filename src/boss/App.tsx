@@ -1,9 +1,9 @@
+import LogoutIcon from '@mui/icons-material/Logout'
 import Box from '@mui/material/Box'
-import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
-import LogoutIcon from '@mui/icons-material/Logout'
+import TextField from '@mui/material/TextField'
 import React, { useCallback, useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -50,7 +50,13 @@ const App: React.FC = () => {
         socket.emit(SocketBossToServer.BOSS_JOIN)
 
         socket.on(SocketServerToBoss.ADD_LIP, (lip: TLip) => {
-            setItems((prevItems) => [ ...prevItems, lip ])
+            setItems((prevItems) => [
+                ...prevItems,
+                {
+                    ...lip,
+                    index: prevItems.filter((item: TLip) => item.status === LipStatus.IDLE).length, // this works cause new lips are idle
+                },
+            ])
         })
     }, [ setItems ])
 

@@ -114,7 +114,6 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
             setItems((currentItems) => {
                 console.log('drag', dragIndex, dragStatus)
                 console.log('drop', dropIndex, dropStatus)
-                console.log('items', JSON.stringify(currentItems, null, 4))
 
                 if (
                     (dropStatus === LipStatus.LIVE && currentItems.findIndex((currentItem) => currentItem.status === LipStatus.LIVE) > -1) ||
@@ -181,11 +180,8 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
     }), [ item ])
 
     return (
-        <StyledWrapper
-            ref={dragRef}
-            isDragging={dragCollection.isDragging}
-        >
-            <ListItem>
+        <StyledWrapper isDragging={dragCollection.isDragging}>
+            <ListItem ref={dragRef}>
                 {children}
             </ListItem>
 
