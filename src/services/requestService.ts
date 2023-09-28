@@ -38,12 +38,12 @@ class RequestService {
                     break
             }
         }
-        this.socket = io(this.baseUrl)
+        this.socket = io(this.baseUrl, { rejectUnauthorized: false })
     }
 
     getSocket() {
         if (this.socket === null) {
-            this.socket = io(this.baseUrl)
+            this.socket = io(this.baseUrl, { rejectUnauthorized: false })
 
         }
         return this.socket
