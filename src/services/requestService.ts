@@ -54,7 +54,7 @@ class RequestService {
     }
 
     _get(url: string) {
-        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
 
         if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
@@ -66,7 +66,7 @@ class RequestService {
     }
 
     _post(url: string, data: TJson) {
-        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
 
         if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
@@ -83,7 +83,7 @@ class RequestService {
     }
 
     _put(url: string, data: TJson) {
-        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
 
         if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
@@ -100,7 +100,7 @@ class RequestService {
     }
 
     _delete(url: string) {
-        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
+        const headers: HeadersInit = { 'Content-Type': 'application/json; charset=utf-8' }
 
         if (this.oAuth2_access_token !== null) {
             headers.Authorization = `Bearer ${this.oAuth2_access_token}`
@@ -174,7 +174,7 @@ class RequestService {
     }
 
     updateLip(lip: Partial<TLip>) {
-        return this._put(`${this.baseUrl}/live/lips`, lip)
+        return this._post(`${this.baseUrl}/live/lips`, lip)
     }
 
     deleteLip(id: number, message: string) {

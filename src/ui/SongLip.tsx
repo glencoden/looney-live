@@ -63,13 +63,15 @@ const SongLip: React.FC<TLip> = ({ songId, date, name, status, message }) => {
 
                         {status === LipStatus.DELETED && (
                             <>
-                                <Typography sx={{ marginBottom: 1 }} color="error">
+                                <Typography
+                                    sx={{ marginBottom: 1 }}
+                                    color="error"
+                                >
                                     Gelöscht
                                 </Typography>
                                 <Typography
                                     sx={{ marginBottom: 1 }}
                                     variant="body2"
-                                    color="error"
                                 >
                                     {message}
                                 </Typography>
