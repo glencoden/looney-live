@@ -82,13 +82,10 @@ const App: React.FC = () => {
                     return prevLips
                 }
 
-                if (lip.status === LipStatus.DONE) {
-                    return prevLips.filter((prevLip) => prevLip.id !== lip.id)
-                }
-
                 if (lip.status === LipStatus.LIVE) {
                     // TODO: trigger stage call!
                 }
+
                 const update = [ ...prevLips ]
 
                 update[index] = lip
@@ -97,17 +94,23 @@ const App: React.FC = () => {
             })
         })
 
-        socket.on(SocketServerToGuest.DELETE_LIP, ({ data, message }: { data: TLip, message: string }) => {
+        socket.on(SocketServerToGuest.DELETE_LIP, (lip: TLip) => {
             setLips((prevLips) => {
                 if (prevLips === null) {
                     return null
                 }
+                const index = prevLips.findIndex((prevLip) => prevLip.id === lip.id)
 
-                return prevLips.filter((prevLip) => prevLip.id !== data.id)
+                if (index === -1) {
+                    return prevLips
+                }
+
+                const update = [ ...prevLips ]
+
+                update[index] = lip
+
+                return update
             })
-
-            // TODO: prompt with message
-            console.log(message)
         })
     }, [ sessionId, setLips ])
 

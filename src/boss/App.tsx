@@ -71,7 +71,10 @@ const App: React.FC = () => {
         setErrorMessage(null)
 
         requestService.login('boss', pw)
-            .then(setIsLoggedIn)
+            .then((isLoggedIn) => {
+                // TODO: delete password once refresh token functionality is implemented -  setPassword('')
+                setIsLoggedIn(isLoggedIn)
+            })
             .catch((err) => {
                 console.warn(err)
                 setErrorMessage('Das hat nicht geklappt.')
@@ -94,15 +97,19 @@ const App: React.FC = () => {
         }
 
         const checkLogin = () => {
-            setIsLoggedIn(requestService.isLoggedIn())
+            // TODO: this should just log out or refresh by token in case token has expired - setIsLoggedIn(requestService.isLoggedIn())
 
-            reference.timeoutId = setTimeout(checkLogin, 1000)
+            if (isLoggedIn && !requestService.isLoggedIn()) {
+                onLogin(password)
+            }
+
+            reference.timeoutId = setTimeout(checkLogin, 1000 * 15)
         }
 
         checkLogin()
 
         return () => clearTimeout(reference.timeoutId)
-    }, [ setIsLoggedIn ])
+    }, [ isLoggedIn, onLogin, password ])
 
     if (!isLoggedIn) {
         return (
