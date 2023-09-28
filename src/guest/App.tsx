@@ -3,7 +3,6 @@ import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
 import React, { useCallback, useEffect, useState } from 'react'
-import { LipStatus } from '../boss/enums/LipStatus.ts'
 import { SocketGuestToServer } from '../enums/SocketGuestToServer.ts'
 import { SocketServerToGuest } from '../enums/SocketServerToGuest.ts'
 import useWakeLock from '../hooks/useWakeLock.ts'
@@ -72,44 +71,36 @@ const App: React.FC = () => {
         socket.emit(SocketGuestToServer.GUEST_JOIN, storageService.getGuestGuid()) // connect guest guid to socket
 
         socket.on(SocketServerToGuest.UPDATE_LIP, (lip: TLip) => {
+            console.log(SocketServerToGuest.UPDATE_LIP, lip)
+
+            // TODO: trigger stage call!
+
             setLips((prevLips) => {
                 if (prevLips === null) {
                     return null
                 }
-                const index = prevLips.findIndex((prevLip) => prevLip.id === lip.id)
-
-                if (index === -1) {
-                    return prevLips
-                }
-
-                if (lip.status === LipStatus.LIVE) {
-                    // TODO: trigger stage call!
-                }
-
-                const update = [ ...prevLips ]
-
-                update[index] = lip
-
-                return update
+                return prevLips.map((prevLip) => {
+                    if (prevLip.id === lip.id) {
+                        return lip
+                    }
+                    return prevLip
+                })
             })
         })
 
         socket.on(SocketServerToGuest.DELETE_LIP, (lip: TLip) => {
+            console.log(SocketServerToGuest.DELETE_LIP, lip)
+
             setLips((prevLips) => {
                 if (prevLips === null) {
                     return null
                 }
-                const index = prevLips.findIndex((prevLip) => prevLip.id === lip.id)
-
-                if (index === -1) {
-                    return prevLips
-                }
-
-                const update = [ ...prevLips ]
-
-                update[index] = lip
-
-                return update
+                return prevLips.map((prevLip) => {
+                    if (prevLip.id === lip.id) {
+                        return lip
+                    }
+                    return prevLip
+                })
             })
         })
     }, [ sessionId, setLips ])
