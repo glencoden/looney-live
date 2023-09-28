@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { LipStatus } from '../boss/enums/LipStatus.ts'
 import { SocketGuestToServer } from '../enums/SocketGuestToServer.ts'
 import { SocketServerToGuest } from '../enums/SocketServerToGuest.ts'
+import useWakeLock from '../hooks/useWakeLock.ts'
 import { requestService } from '../services/requestService.ts'
 import { storageService } from '../services/storageService.ts'
 import { TLip } from '../types/TLip.ts'
@@ -22,6 +23,8 @@ const App: React.FC = () => {
     const [ activeTab, setActiveTab ] = useState(0)
 
     const [ selectedSong, setSelectedSong ] = useState<TSong | null>(null)
+
+    useWakeLock(1000 * 60 * 3)
 
     useEffect(() => {
         const onSessionStart = () => {
@@ -123,11 +126,15 @@ const App: React.FC = () => {
                     width: '100%',
                     height: '100dvh',
                     display: 'flex',
+                    flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    gap: 3,
+                    padding: 5,
                 }}
             >
-                <Typography variant="h5">Schön dass du dabei bist! Die Session fängt bald an.</Typography>
+                <Typography variant="h5">Schön dass du dabei bist!</Typography>
+                <Typography>Die Session fängt bald an.</Typography>
             </Box>
         )
     }

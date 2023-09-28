@@ -9,6 +9,7 @@ import { DndProvider } from 'react-dnd'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { SocketBossToServer } from '../enums/SocketBossToServer.ts'
 import { SocketServerToBoss } from '../enums/SocketServerToBoss.ts'
+import useWakeLock from '../hooks/useWakeLock.ts'
 import { requestService } from '../services/requestService.ts'
 import { TLip } from '../types/TLip.ts'
 import { TSession } from '../types/TSession.ts'
@@ -33,6 +34,8 @@ const App: React.FC = () => {
     const [ errorMessage, setErrorMessage ] = useState<string | null>(null)
     const [ isLoggedIn, setIsLoggedIn ] = useState(false)
     const [ activeSession, setActiveSession ] = useState<TSession | null>(null)
+
+    useWakeLock(1000 * 60 * 60)
 
     // WEB SOCKET
 
