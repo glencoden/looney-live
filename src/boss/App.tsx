@@ -6,8 +6,8 @@ import IconButton from '@mui/material/IconButton'
 import TextField from '@mui/material/TextField'
 import React, { useCallback, useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
-// import { TouchBackend } from 'react-dnd-touch-backend'
+// import { HTML5Backend } from 'react-dnd-html5-backend'
+import { TouchBackend } from 'react-dnd-touch-backend'
 import { SocketBossToServer } from '../enums/SocketBossToServer.ts'
 import { SocketServerToBoss } from '../enums/SocketServerToBoss.ts'
 import useWakeLock from '../hooks/useWakeLock.ts'
@@ -181,7 +181,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <DndProvider backend={HTML5Backend}>
+        <DndProvider backend={TouchBackend}>
             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
                 <Box sx={{ width: '820px', display: 'flex', justifyContent: 'center' }}>
 
