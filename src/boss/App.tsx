@@ -31,6 +31,7 @@ const START_FIELD_HEIGHT = 124
 const App: React.FC = () => {
     const [ items, setItems ] = useState<TLip[]>([])
 
+    const [ username, setUsername ] = useState('')
     const [ password, setPassword ] = useState('')
     const [ errorMessage, setErrorMessage ] = useState<string | null>(null)
     const [ isLoggedIn, setIsLoggedIn ] = useState(false)
@@ -96,12 +97,12 @@ const App: React.FC = () => {
 
     // LOGIN
 
-    const onLogin = useCallback((pw: string) => {
+    const onLogin = useCallback((username: string, password: string) => {
         setErrorMessage(null)
 
-        requestService.login('boss', pw)
+        requestService.login(username, password)
             .then((isLoggedIn) => {
-                // TODO: delete password once refresh token functionality is implemented -  setPassword('')
+                // TODO: delete username and password once refresh token functionality is implemented - setUsername('') setPassword('')
                 setIsLoggedIn(isLoggedIn)
             })
             .catch((err) => {
@@ -116,6 +117,7 @@ const App: React.FC = () => {
             console.warn('Logout failed.')
             return
         }
+        setUsername('')
         setPassword('')
         setIsLoggedIn(false)
     }, [ setPassword, setIsLoggedIn ])
@@ -126,11 +128,7 @@ const App: React.FC = () => {
         }
 
         const checkLogin = () => {
-            // TODO: this should just log out or refresh by token in case token has expired - setIsLoggedIn(requestService.isLoggedIn())
-
-            if (isLoggedIn && !requestService.isLoggedIn()) {
-                onLogin(password)
-            }
+            setIsLoggedIn(requestService.isLoggedIn())
 
             reference.timeoutId = setTimeout(checkLogin, 1000 * 15)
         }
@@ -151,15 +149,21 @@ const App: React.FC = () => {
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    gap: '32px',
                 }}
                 noValidate
                 autoComplete="off"
             >
                 <TextField
+                    label="Username"
+                    autoFocus={true}
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    error={errorMessage !== null}
+                />
+
+                <TextField
                     label="Passwort"
                     type="password"
-                    autoFocus={true}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     error={errorMessage !== null}
@@ -168,7 +172,8 @@ const App: React.FC = () => {
 
                 <Button
                     variant="contained"
-                    onClick={() => onLogin(password)}
+                    sx={{ marginTop: 5 }}
+                    onClick={() => onLogin(username, password)}
                 >
                     Login
                 </Button>
