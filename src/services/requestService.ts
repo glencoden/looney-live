@@ -23,10 +23,13 @@ class RequestService {
     socket: Socket | null = null
 
     constructor() {
-        if (import.meta.env.DEV) {
+        if (import.meta.env.MODE === 'development') {
             this.baseUrl = 'http://localhost:5555'
         } else {
             switch (import.meta.env.VITE_HOST_ENV) {
+                case 'local':
+                    this.baseUrl = 'http://localhost:5555'
+                    break
                 case 'develop':
                     this.baseUrl = 'http://looneyapi.lan'
                     break

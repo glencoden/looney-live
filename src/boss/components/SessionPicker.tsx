@@ -62,29 +62,12 @@ const SessionPicker: React.FC<Props> = ({ onSelect }) => {
                     width: '400px',
                     display: 'flex',
                     flexDirection: 'column',
+                    alignItems: 'center',
                     gap: 3,
                     padding: 5,
                     overflow: 'hidden',
                 }}
             >
-                {sessions !== null && sessions.length > 0 && (
-                    <>
-                        <Typography variant="h5">Session auswählen</Typography>
-
-                        {sessions.map((session) => (
-                            <Button
-                                key={session.id}
-                                variant="outlined"
-                                onClick={() => onSelect(session)}
-                            >
-                                {session.title}
-                            </Button>
-                        ))}
-
-                        <Divider />
-                    </>
-                )}
-
                 <Typography variant="h5">Neue Session erstellen</Typography>
 
                 <TextField
@@ -96,6 +79,7 @@ const SessionPicker: React.FC<Props> = ({ onSelect }) => {
 
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
+                        sx={{ width: '100%' }}
                         label="Datum"
                         value={date}
                         onChange={(newValue) => setDate(newValue)}
@@ -124,6 +108,25 @@ const SessionPicker: React.FC<Props> = ({ onSelect }) => {
                 >
                     Erstellen
                 </Button>
+
+                {sessions !== null && sessions.length > 0 && (
+                    <>
+                        <Divider sx={{ width: '100%' }} />
+
+                        <Typography variant="h5">Session auswählen</Typography>
+
+                        {sessions.map((session) => (
+                            <Button
+                                key={session.id}
+                                variant="outlined"
+                                sx={{ width: '100%' }}
+                                onClick={() => onSelect(session)}
+                            >
+                                {session.title}
+                            </Button>
+                        ))}
+                    </>
+                )}
             </Box>
         </Box>
     )
