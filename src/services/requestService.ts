@@ -193,8 +193,8 @@ class RequestService {
 
     // guest
 
-    getGuestData(guestGuid: string): Promise<{ success: boolean, message?: string, data?: TGuestData }> {
-        return this._get(`${this.baseUrl}/live/guest${guestGuid ? `/${guestGuid}` : ''}`)
+    getGuestData(sessionGuid: string, guestGuid: string | undefined): Promise<ServerResult<TGuestData>> {
+        return this._get(`${this.baseUrl}/live/guest/${sessionGuid}${guestGuid ? `/${guestGuid}` : ''}`)
     }
 
     createGuestLip(guid: string, songId: number, name: string) {

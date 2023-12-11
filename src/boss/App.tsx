@@ -14,8 +14,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
-import { SocketBossToServer } from '../enums/SocketBossToServer.ts'
-import { SocketServerToBoss } from '../enums/SocketServerToBoss.ts'
+import { SocketEvents } from '../enums/SocketEvents.ts'
 import useWakeLock from '../hooks/useWakeLock.ts'
 import { requestService } from '../services/requestService.ts'
 import { TLip } from '../types/TLip.ts'
@@ -99,9 +98,9 @@ const App: React.FC = () => {
             return
         }
 
-        socket.emit(SocketBossToServer.BOSS_JOIN)
+        socket.emit(SocketEvents.BOSS_SERVER_JOIN)
 
-        socket.on(SocketServerToBoss.ADD_LIP, (lip: TLip) => {
+        socket.on(SocketEvents.SERVER_BOSS_ADD_LIP, (lip: TLip) => {
             setItems((prevItems) => [ ...prevItems, lip ])
         })
     }, [ setItems ])
