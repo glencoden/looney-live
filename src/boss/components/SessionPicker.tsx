@@ -17,6 +17,7 @@ import { useCallback, useState } from 'react'
 import { MutationRequestType } from '../../enums/MutationRequestType.ts'
 import { TSession } from '../../types/TSession.ts'
 import { useSessionMutation } from '../requests/mutations/useSessionMutation.ts'
+import { useQRCodeQuery } from '../requests/queries/useQRCodeQuery.ts'
 import { useSessionsQuery } from '../requests/queries/useSessionsQuery.ts'
 import { useSetlistsQuery } from '../requests/queries/useSetlistsQuery.ts'
 
@@ -28,6 +29,12 @@ const SessionPicker = () => {
     const [ startDate, setStartDate ] = useState<Date | null>(null)
     const [ endDate, setEndDate ] = useState<Date | null>(null)
     const [ title, setTitle ] = useState('')
+
+    // GET QR code
+
+    const { data: QRCodeResult, isLoading: isQRCodeLoading } = useQRCodeQuery(sessionEditPayload?.id)
+
+    const QRCodeHTML = QRCodeResult?.data ?? null
 
     // GET setlists
 
@@ -134,8 +141,16 @@ const SessionPicker = () => {
 
     // UI
 
-    if (isSetlistsLoading || isSessionsLoading || isMutationPending) {
-        return <CircularProgress />
+    if (
+        isSetlistsLoading ||
+        isSessionsLoading ||
+        isMutationPending
+    ) {
+        return (
+            <Box sx={{ height: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <CircularProgress />
+            </Box>
+        )
     }
 
     return (
@@ -154,6 +169,20 @@ const SessionPicker = () => {
                 <Typography variant="h5">
                     {sessionEditPayload !== null ? 'Session bearbeiten' : 'Neue Session erstellen'}
                 </Typography>
+
+                {sessionEditPayload !== null && QRCodeHTML !== null && (
+                    isQRCodeLoading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <div
+                            dangerouslySetInnerHTML={{
+                                __html: QRCodeHTML,
+                            }}
+                        />
+                    )
+                )}
 
                 <TextField
                     fullWidth

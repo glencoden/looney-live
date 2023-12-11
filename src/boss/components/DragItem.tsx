@@ -1,6 +1,7 @@
 import styled from '@emotion/styled'
 import CircularProgress from '@mui/material/CircularProgress'
 import ListItem from '@mui/material/ListItem'
+import Box from '@mui/material/Box'
 import React from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { TLip } from '../../types/TLip.ts'
@@ -67,7 +68,7 @@ const StyledDropBelowArea = styled.div<StyledDropAreaProps>`
 const DragItem: React.FC<Props> = ({ item, children }) => {
     const { data: lipsResult, isLoading: isLipsLoading } = useLipsQuery()
 
-    const currentItems = lipsResult?.data ?? null
+    const currentItems = lipsResult?.data?.lips ?? null
 
     const { mutate, isPending } = useLipMutation()
 
@@ -193,7 +194,11 @@ const DragItem: React.FC<Props> = ({ item, children }) => {
             isDragging={dragCollection.isDragging}
         >
             <ListItem>
-                {showLoading ? <CircularProgress /> : children}
+                {showLoading ? (
+                    <Box sx={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <CircularProgress />
+                    </Box>
+                ) : children}
             </ListItem>
 
             <StyledDropAboveArea

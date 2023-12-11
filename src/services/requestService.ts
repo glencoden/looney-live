@@ -183,7 +183,7 @@ class RequestService {
         return this._delete(`${this.baseUrl}/live/sessions/${sessionId}`)
     }
 
-    getLips(sessionId?: number, lipId?: number): Promise<ServerResult<TLip[]>> {
+    getLips(sessionId?: number, lipId?: number): Promise<ServerResult<{ sessionId: number, lips: TLip[] }>> {
         return this._get(`${this.baseUrl}/live/lips${sessionId ? `/${sessionId}` : ''}${lipId ? `/${lipId}` : ''}`)
     }
 
@@ -205,6 +205,10 @@ class RequestService {
 
     getSong(id: number) {
         return this._get(`${this.baseUrl}/repertoire/songs/${id}`)
+    }
+
+    getQRCode(sessionId?: number): Promise<ServerResult<string>> {
+        return this._get(`${this.baseUrl}/live/qr_code${sessionId ? `/${sessionId}` : ''}`)
     }
 }
 

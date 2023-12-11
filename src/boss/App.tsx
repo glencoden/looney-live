@@ -9,6 +9,7 @@ import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
 import ListItem from '@mui/material/ListItem'
 import TextField from '@mui/material/TextField'
+import CircularProgress from '@mui/material/CircularProgress'
 import React, { useCallback, useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -107,11 +108,13 @@ const App: React.FC = () => {
 
     // GET lips
 
-    const { data, isLoading } = useLipsQuery()
+    const { data: lipsResult, isLoading } = useLipsQuery()
 
-    console.log('lips query data', data)
-    console.log('lips query isLoading', isLoading)
-    // if items is not lips from data, set items
+    const lips = lipsResult?.data?.lips ?? null
+
+    if (lips !== null && lips !== items) {
+        setItems(lips)
+    }
 
     // Login callbacks
 
@@ -156,6 +159,14 @@ const App: React.FC = () => {
     }, [])
 
     // UI
+
+    if (isLoading) {
+        return (
+            <Box sx={{ height: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <CircularProgress />
+            </Box>
+        )
+    }
 
     if (!isLoggedIn) {
         const ViewNav = () => (
