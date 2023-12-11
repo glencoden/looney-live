@@ -13,12 +13,12 @@ import { SocketServerToBoss } from '../enums/SocketServerToBoss.ts'
 import useWakeLock from '../hooks/useWakeLock.ts'
 import { requestService } from '../services/requestService.ts'
 import { TLip } from '../types/TLip.ts'
-import { TSession } from '../types/TSession.ts'
 import SongLip, { SONG_LIP_WIDTH } from '../ui/SongLip.tsx'
 import DragItem from './components/DragItem.tsx'
 import DropTarget from './components/DropTarget.tsx'
 import SessionPicker from './components/SessionPicker.tsx'
 import { LipStatus } from './enums/LipStatus.ts'
+import { useLipsQuery } from './requests/queries/useLipsQuery.ts'
 
 const filterItems = (items: TLip[], filter: LipStatus): TLip[] => {
     return items
@@ -35,9 +35,24 @@ const App: React.FC = () => {
     const [ password, setPassword ] = useState('')
     const [ errorMessage, setErrorMessage ] = useState<string | null>(null)
     const [ isLoggedIn, setIsLoggedIn ] = useState(false)
-    const [ activeSession, setActiveSession ] = useState<TSession | null>(null)
+
+    // WAKE LOCK
 
     useWakeLock(1000 * 60 * 60)
+
+    // UNLOAD LOCK
+
+    useEffect(() => {
+        const onBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.returnValue = `Willst du die Seite wirklich verlassen?`
+        }
+
+        window.addEventListener('beforeunload', onBeforeUnload)
+
+        return () => {
+            window.removeEventListener('beforeunload', onBeforeUnload)
+        }
+    }, [])
 
     // WEB SOCKET
 
@@ -51,49 +66,17 @@ const App: React.FC = () => {
         socket.emit(SocketBossToServer.BOSS_JOIN)
 
         socket.on(SocketServerToBoss.ADD_LIP, (lip: TLip) => {
-            setItems((prevItems) => [
-                ...prevItems,
-                {
-                    ...lip,
-                    index: prevItems.filter((item: TLip) => item.status === LipStatus.IDLE).length, // this works cause new lips are idle
-                },
-            ])
+            setItems((prevItems) => [ ...prevItems, lip ])
         })
-
-        const onBeforeUnload = (event: BeforeUnloadEvent) => {
-            event.returnValue = `Willst du die Seite wirklich verlassen?`
-        }
-
-        window.addEventListener('beforeunload', onBeforeUnload)
-
-        return () => {
-            window.removeEventListener('beforeunload', onBeforeUnload)
-        }
     }, [ setItems ])
 
-    // SESSION START
+    // GET LIPS
 
-    useEffect(() => {
-        if (activeSession === null) {
-            return
-        }
-        const indexes: { [status: string]: number } = {}
+    const { data, isLoading } = useLipsQuery()
 
-        requestService.startSession(activeSession.id)
-            .then((response) => {
-                setItems(response.data.lips.map((lip) => {
-                    if (typeof indexes[lip.status] === 'undefined') {
-                        indexes[lip.status] = 0
-                    } else {
-                        indexes[lip.status] = indexes[lip.status] + 1
-                    }
-                    return {
-                        ...lip,
-                        index: indexes[lip.status],
-                    }
-                }))
-            })
-    }, [ activeSession ])
+    console.log('lips query data', data)
+    console.log('lips query isLoading', isLoading)
+    // if items is not lips from data, set items
 
     // LOGIN
 
@@ -102,7 +85,8 @@ const App: React.FC = () => {
 
         requestService.login(username, password)
             .then((isLoggedIn) => {
-                // TODO: delete username and password once refresh token functionality is implemented - setUsername('') setPassword('')
+                setUsername('')
+                setPassword('')
                 setIsLoggedIn(isLoggedIn)
             })
             .catch((err) => {
@@ -117,10 +101,8 @@ const App: React.FC = () => {
             console.warn('Logout failed.')
             return
         }
-        setUsername('')
-        setPassword('')
         setIsLoggedIn(false)
-    }, [ setPassword, setIsLoggedIn ])
+    }, [ setIsLoggedIn ])
 
     useEffect(() => {
         const reference: { timeoutId: ReturnType<typeof setTimeout> | undefined } = {
@@ -136,7 +118,7 @@ const App: React.FC = () => {
         checkLogin()
 
         return () => clearTimeout(reference.timeoutId)
-    }, [ isLoggedIn, onLogin, password ])
+    }, [])
 
     if (!isLoggedIn) {
         return (
@@ -181,8 +163,10 @@ const App: React.FC = () => {
         )
     }
 
-    if (activeSession === null) {
-        return <SessionPicker onSelect={setActiveSession} />
+    // TODO: implement router
+
+    if (true) {
+        return <SessionPicker />
     }
 
     return (
@@ -212,7 +196,6 @@ const App: React.FC = () => {
                                     <DragItem
                                         key={item.id}
                                         item={item}
-                                        setItems={setItems}
                                     >
                                         <SongLip {...item} />
                                     </DragItem>
@@ -235,7 +218,6 @@ const App: React.FC = () => {
                                     <DragItem
                                         key={item.id}
                                         item={item}
-                                        setItems={setItems}
                                     >
                                         <SongLip {...item} />
                                     </DragItem>
@@ -292,7 +274,6 @@ const App: React.FC = () => {
                                     <DragItem
                                         key={item.id}
                                         item={item}
-                                        setItems={setItems}
                                     >
                                         <SongLip {...item} />
                                     </DragItem>

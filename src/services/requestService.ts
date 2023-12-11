@@ -1,8 +1,11 @@
+import { ServerResult } from '../types/ServerResult.ts'
 import { TGuestData } from '../types/TGuestData.ts'
 import { TJson } from '../types/TJson.ts'
 import { TLip } from '../types/TLip.ts'
+import { TLipUpdate } from '../types/TLipUpdate.ts'
 import { TSession } from '../types/TSession.ts'
 import { io, Socket } from 'socket.io-client'
+import { TSetlist } from '../types/TSetlist.ts'
 
 function encodeURI(data: TJson) {
     const formBody = []
@@ -160,28 +163,32 @@ class RequestService {
         return true
     }
 
-    getSessions(id?: number) {
-        return this._get(`${this.baseUrl}/live/sessions${id ? `/${id}` : ''}`)
+    getSetlists(): Promise<ServerResult<TSetlist[]>> {
+        return this._get(`${this.baseUrl}/repertoire/setlist`)
     }
 
-    getSetlists() {
-        return this._get(`${this.baseUrl}/repertoire/setlist`)
+    getSessions(id?: number): Promise<ServerResult<TSession[]>> {
+        return this._get(`${this.baseUrl}/live/sessions${id ? `/${id}` : ''}`)
     }
 
     createSession(session: Partial<TSession>) {
         return this._post(`${this.baseUrl}/live/sessions`, session)
     }
 
-    startSession(id: number): Promise<{ data: { session: TSession, lips: TLip[], guests: string[] } }> {
-        return this._get(`${this.baseUrl}/live/sessions/${id}/start`)
+    writeSession(session: TSession) {
+        return this._put(`${this.baseUrl}/live/sessions`, session)
     }
 
-    updateLip(lip: Partial<TLip>) {
-        return this._post(`${this.baseUrl}/live/lips`, lip)
+    deleteSession(sessionId: TSession['id']) {
+        return this._delete(`${this.baseUrl}/live/sessions/${sessionId}`)
     }
 
-    deleteLip(id: number, message: string) {
-        return this._delete(`${this.baseUrl}/live/lips/${id}${encodeURI({ message })}`)
+    getLips(sessionId?: number, lipId?: number): Promise<ServerResult<TLip[]>> {
+        return this._get(`${this.baseUrl}/live/lips${sessionId ? `/${sessionId}` : ''}${lipId ? `/${lipId}` : ''}`)
+    }
+
+    updateLip(data: TLipUpdate) {
+        return this._put(`${this.baseUrl}/live/lips`, data)
     }
 
     // guest
