@@ -13,28 +13,22 @@ type MutationPayload = {
 export const useLipMutation = () => {
     const queryClient = useQueryClient()
 
-    const mutationFn = useCallback((payload: MutationPayload) => {
-        const { lipUpdate, optimisticResult } = payload
-        // TODO: set optimistic result
-        return requestService.updateLip(lipUpdate)
-    }, [])
-
     const lipsQueryKey = useMemo(() => {
         return getLipsQueryKey()
     }, [])
 
-    const onSuccess = useCallback(() => {
+    const mutationFn = useCallback((payload: MutationPayload) => {
+        queryClient.setQueryData(lipsQueryKey, payload.optimisticResult)
+
+        return requestService.updateLip(payload.lipUpdate)
+    }, [ queryClient, lipsQueryKey ])
+
+    const onSettled = useCallback(() => {
         queryClient.invalidateQueries({ queryKey: lipsQueryKey })
     }, [ queryClient, lipsQueryKey ])
 
-    const onError = useCallback((err, variables, context) => {
-        // TODO: implement rollback here
-        console.log(err, variables, context)
-    }, [])
-
     return useMutation({
         mutationFn,
-        onSuccess,
-        onError,
+        onSettled,
     })
 }

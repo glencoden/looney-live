@@ -1,4 +1,5 @@
 import styled from '@emotion/styled'
+import CircularProgress from '@mui/material/CircularProgress'
 import ListItem from '@mui/material/ListItem'
 import React from 'react'
 import { useDrag, useDrop } from 'react-dnd'
@@ -64,11 +65,11 @@ const StyledDropBelowArea = styled.div<StyledDropAreaProps>`
 `
 
 const DragItem: React.FC<Props> = ({ item, children }) => {
-    const { data: lipsResult } = useLipsQuery()
+    const { data: lipsResult, isLoading: isLipsLoading } = useLipsQuery()
 
     const currentItems = lipsResult?.data ?? null
 
-    const { mutate } = useLipMutation()
+    const { mutate, isPending } = useLipMutation()
 
     const [ dropAboveCollection, dropAboveRef ] = useDrop({
         accept: DragItemType.LIP,
@@ -102,6 +103,7 @@ const DragItem: React.FC<Props> = ({ item, children }) => {
             const dropResult = monitor.getDropResult() as DropResult
 
             if (
+                currentItems === null ||
                 !dropResult ||
                 (
                     dropResult.status === item.status &&
@@ -166,7 +168,6 @@ const DragItem: React.FC<Props> = ({ item, children }) => {
                 message = DELETE_MESSAGES.TOO_LATE // TODO: defer deletion with message selection
             }
 
-            // TODO: handle loading status
             mutate({
                 lipUpdate: {
                     id: item.id,
@@ -184,13 +185,15 @@ const DragItem: React.FC<Props> = ({ item, children }) => {
         }),
     }), [ item, currentItems, mutate ])
 
+    const showLoading = isLipsLoading || isPending
+
     return (
         <StyledWrapper
             ref={dragRef}
             isDragging={dragCollection.isDragging}
         >
             <ListItem>
-                {children}
+                {showLoading ? <CircularProgress /> : children}
             </ListItem>
 
             <StyledDropAboveArea

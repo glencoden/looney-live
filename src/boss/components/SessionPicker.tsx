@@ -1,4 +1,4 @@
-import { Delete } from '@mui/icons-material'
+import Delete from '@mui/icons-material/Delete'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'

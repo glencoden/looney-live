@@ -42,7 +42,7 @@ const SongLip: React.FC<TLip> = ({ songId, date, name, status, message }) => {
     const isGuestLiveCall = import.meta.env.VITE_BUILD_TYPE === 'guest' && status === LipStatus.LIVE
 
     return (
-        <Card sx={{ width: `${SONG_LIP_WIDTH}px`, border: isGuestLiveCall ? '2px solid deeppink' : 'none' }}>
+        <Card sx={{ width: `${SONG_LIP_WIDTH}px`, border: isGuestLiveCall ? '2px solid deeppink' : 'none', userSelect: 'none' }}>
             <CardContent>
                 {song === null ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
