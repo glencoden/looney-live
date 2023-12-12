@@ -48,10 +48,16 @@ class RequestService {
     }
 
     getSocket() {
-        if (this.socket === null) {
-            this.socket = io(this.baseUrl, { rejectUnauthorized: false })
+        return this.socket
+    }
 
+    openSocket() {
+        if (this.socket !== null) {
+            throw new Error('Socket already open.')
         }
+
+        this.socket = io(this.baseUrl, { rejectUnauthorized: false })
+
         return this.socket
     }
 
@@ -197,8 +203,8 @@ class RequestService {
         return this._get(`${this.baseUrl}/live/guest/${sessionGuid}${guestGuid ? `/${guestGuid}` : ''}`)
     }
 
-    createGuestLip(guid: string, songId: number, name: string) {
-        return this._post(`${this.baseUrl}/live/guest/${guid}`, { songId, name })
+    createGuestLip(sessionGuid: string, guestGuid: string, songId: number, name: string) {
+        return this._post(`${this.baseUrl}/live/guest/${sessionGuid}/${guestGuid}`, { songId, name })
     }
 
     // shared

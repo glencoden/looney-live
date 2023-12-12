@@ -226,13 +226,6 @@ const SessionPicker = () => {
                 </FormControl>
 
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button
-                        variant="contained"
-                        onClick={() => onMutate(sessionEditPayload !== null ? MutationRequestType.UPDATE : MutationRequestType.CREATE)}
-                    >
-                        {sessionEditPayload !== null ? 'Speichern' : 'Erstellen'}
-                    </Button>
-
                     {sessionEditPayload !== null && (
                         <Button
                             variant="contained"
@@ -242,6 +235,13 @@ const SessionPicker = () => {
                             Zurück
                         </Button>
                     )}
+
+                    <Button
+                        variant="contained"
+                        onClick={() => onMutate(sessionEditPayload !== null ? MutationRequestType.UPDATE : MutationRequestType.CREATE)}
+                    >
+                        {sessionEditPayload !== null ? 'Speichern' : 'Erstellen'}
+                    </Button>
                 </Box>
 
                 {sessions !== null && sessions.length > 0 && (

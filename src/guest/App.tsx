@@ -28,22 +28,32 @@ const App: React.FC = () => {
 
     useWakeLock(1000 * 60 * 3)
 
-    // Join session
+    // Sign up for session, receive guest guid
 
     useEffect(() => {
+        // Set session guid from url parameter to local storage
+
         const urlParams = new URLSearchParams(location.search)
 
         const sessionGuid = urlParams.get('session')
 
-        console.log('session guid from params', sessionGuid)
+        if (sessionGuid !== null && sessionGuid.length > 0) {
+            storageService.setSessionGuid(sessionGuid)
 
-        if (sessionGuid === null || sessionGuid.length === 0) {
-            return
+            history.replaceState({}, document.title, location.origin) // remove session guid url parameter after it's been stored
         }
 
-        storageService.setSessionGuid(sessionGuid)
+        // Open socket if it isn't already open
 
-        history.replaceState({}, document.title, location.origin) // remove session guid url parameter after it's been stored
+        let socket = requestService.getSocket()
+
+        const isSocketAlreadyOpen = socket !== null
+
+        if (!isSocketAlreadyOpen) {
+            socket = requestService.openSocket()
+        }
+
+        // Session start callback
 
         const onSessionStart = () => {
             const sessionGuid = storageService.getSessionGuid()
@@ -56,6 +66,7 @@ const App: React.FC = () => {
 
             requestService.getGuestData(sessionGuid, guestGuid)
                 .then((result) => {
+                    // no data if session isn't running yet
                     if (result.data === null) {
                         console.log(result.error)
                         return
@@ -66,15 +77,20 @@ const App: React.FC = () => {
                     setSessionId(result.data.sessionId)
                     setSongs(result.data.songs)
                     setLips(result.data.lips)
+
+                    if (socket === null) {
+                        return
+                    }
+
+                    socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid()) // maps guest guid to socket
                 })
         }
 
         onSessionStart()
 
-        // TODO: poll socket
-        const socket = requestService.getSocket()
+        // Add socket listeners if it isn't already open
 
-        if (socket === null) {
+        if (isSocketAlreadyOpen || socket === null) {
             return
         }
 
@@ -101,9 +117,7 @@ const App: React.FC = () => {
                 })
             })
         })
-
-        socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid()) // connect guest guid to socket
-    }, [ setSongs, setLips ])
+    }, [])
 
     const onSongSelect = useCallback((song: TSong) => {
         const selectedLips = lips?.filter((lip) => lip.status !== LipStatus.DONE && lip.status !== LipStatus.DELETED)
@@ -127,7 +141,7 @@ const App: React.FC = () => {
             setActiveTab(1)
         }
         setSelectedSong(null)
-    }, [ setLips, setActiveTab, setSelectedSong ])
+    }, [])
 
     if (sessionId === null) {
         return (

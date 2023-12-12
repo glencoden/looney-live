@@ -16,7 +16,7 @@ export const getLipsQueryKey = (sessionId?: number, lipId?: number) => {
     return result
 }
 
-export const useLipsQuery = (sessionId?: number, lipId?: number) => {
+export const useLipsQuery = (sessionId?: number, lipId?: number, enabled = true) => {
     const queryKey = useMemo(() => {
         return getLipsQueryKey(sessionId, lipId)
     }, [ sessionId, lipId ])
@@ -28,5 +28,6 @@ export const useLipsQuery = (sessionId?: number, lipId?: number) => {
     return useQuery({
         queryKey,
         queryFn,
+        enabled,
     })
 }

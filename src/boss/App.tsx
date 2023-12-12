@@ -17,18 +17,20 @@ import { TouchBackend } from 'react-dnd-touch-backend'
 import { SocketEvents } from '../enums/SocketEvents.ts'
 import useWakeLock from '../hooks/useWakeLock.ts'
 import { requestService } from '../services/requestService.ts'
+import { ServerResult } from '../types/ServerResult.ts'
 import { TLip } from '../types/TLip.ts'
+import { TSession } from '../types/TSession.ts'
 import SongLip, { SONG_LIP_WIDTH } from '../ui/SongLip.tsx'
 import DragItem from './components/DragItem.tsx'
 import DropTarget from './components/DropTarget.tsx'
 import SessionPicker from './components/SessionPicker.tsx'
 import { LipStatus } from './enums/LipStatus.ts'
-import { isIPad } from './helpers/isIPad.ts'
+import { isIPadNotDesktop } from './helpers/isIPadNotDesktop.ts'
 import { useLipsQuery } from './requests/queries/useLipsQuery.ts'
 import Typography from '@mui/material/Typography'
 import List from '@mui/material/List'
 
-const dndBackend = isIPad() ? TouchBackend : HTML5Backend
+const dndBackend = isIPadNotDesktop() ? TouchBackend : HTML5Backend
 
 const prepareItems = (items: TLip[], filter: LipStatus): TLip[] => {
     return items
@@ -49,9 +51,20 @@ enum LoggedInView {
 }
 
 const App: React.FC = () => {
-    // Lips list, extendable by socket payload
-
+    // List of lips extendable by socket payload
     const [ items, setItems ] = useState<TLip[]>([])
+
+    const [ activeSession, setActiveSession ] = useState<TSession | null>(null)
+
+    // GET lips
+
+    const { data: lipsResult, isLoading } = useLipsQuery(activeSession?.id, undefined, activeSession !== null)
+
+    const lips = lipsResult?.data?.lips ?? null
+
+    if (lips !== null && lips !== items) {
+        setItems(lips)
+    }
 
     // Login form data
 
@@ -62,14 +75,18 @@ const App: React.FC = () => {
 
     // Router
 
-    const [ loggedOutView, setLoggedOutView ] = useState<LoggedOutView>(LoggedOutView.LOGIN)
-    const [ loggedInView, setLoggedInView ] = useState<LoggedInView>(LoggedInView.LIVE)
+    const hasLiveSessionWidth = window.innerWidth >= 820
+    const defaultLoggedOutView = hasLiveSessionWidth ? LoggedOutView.LOGIN : LoggedOutView.LIPS
+    const defaultLoggedInView = hasLiveSessionWidth ? LoggedInView.LIVE : LoggedInView.SESSION_PICKER
+
+    const [ loggedOutView, setLoggedOutView ] = useState<LoggedOutView>(defaultLoggedOutView)
+    const [ loggedInView, setLoggedInView ] = useState<LoggedInView>(defaultLoggedInView)
 
     // Reset routes when login status changes
     useEffect(() => {
-        setLoggedOutView(LoggedOutView.LOGIN)
-        setLoggedInView(LoggedInView.LIVE)
-    }, [ isLoggedIn ])
+        setLoggedOutView(defaultLoggedOutView)
+        setLoggedInView(defaultLoggedInView)
+    }, [ isLoggedIn, defaultLoggedOutView, defaultLoggedInView ])
 
     // Wake lock
 
@@ -92,28 +109,27 @@ const App: React.FC = () => {
     // Web socket
 
     useEffect(() => {
-        const socket = requestService.getSocket()
-
-        if (socket === null) {
+        if (requestService.getSocket() !== null) {
             return
         }
 
-        socket.emit(SocketEvents.BOSS_SERVER_JOIN)
+        const socket = requestService.openSocket()
 
         socket.on(SocketEvents.SERVER_BOSS_ADD_LIP, (lip: TLip) => {
             setItems((prevItems) => [ ...prevItems, lip ])
         })
-    }, [ setItems ])
 
-    // GET lips
+        socket.on(SocketEvents.SERVER_ALL_SESSION_START, (session: TSession) => {
+            setActiveSession(session)
+        })
 
-    const { data: lipsResult, isLoading } = useLipsQuery()
-
-    const lips = lipsResult?.data?.lips ?? null
-
-    if (lips !== null && lips !== items) {
-        setItems(lips)
-    }
+        socket.emit(SocketEvents.BOSS_SERVER_JOIN, (result: ServerResult<TSession>) => {
+            if (result.data === null) {
+                return
+            }
+            setActiveSession(result.data)
+        })
+    }, [])
 
     // Login callbacks
 
@@ -139,7 +155,7 @@ const App: React.FC = () => {
             return
         }
         setIsLoggedIn(false)
-    }, [ setIsLoggedIn ])
+    }, [])
 
     useEffect(() => {
         const reference: { timeoutId: ReturnType<typeof setTimeout> | undefined } = {
@@ -208,13 +224,15 @@ const App: React.FC = () => {
                                         <Typography>Noch keine Lips</Typography>
                                     </Box>
                                 )
-                                : items.map((item) => (
-                                    <List>
-                                        <ListItem key={item.id}>
-                                            <SongLip {...item} />
-                                        </ListItem>
+                                : (
+                                    <List sx={{ paddingTop: 9 }}>
+                                        {items.map((item) => (
+                                            <ListItem key={item.id}>
+                                                <SongLip {...item} />
+                                            </ListItem>
+                                        ))}
                                     </List>
-                                ))
+                                )
                             }
                         </Box>
                     </>
@@ -239,7 +257,7 @@ const App: React.FC = () => {
                         >
                             <TextField
                                 label="Username"
-                                autoFocus={true}
+                                // autoFocus={true}
                                 value={username}
                                 onChange={(event) => setUsername(event.target.value)}
                                 error={errorMessage !== null}
@@ -269,12 +287,14 @@ const App: React.FC = () => {
 
     const ViewNavButtons = () => (
         <>
-            <IconButton
-                color={loggedInView === LoggedInView.LIVE ? 'primary' : 'default'}
-                onClick={() => setLoggedInView(LoggedInView.LIVE)}
-            >
-                <PlayCircleOutlineIcon />
-            </IconButton>
+            {hasLiveSessionWidth && (
+                <IconButton
+                    color={loggedInView === LoggedInView.LIVE ? 'primary' : 'default'}
+                    onClick={() => setLoggedInView(LoggedInView.LIVE)}
+                >
+                    <PlayCircleOutlineIcon />
+                </IconButton>
+            )}
 
             <IconButton
                 color={loggedInView === LoggedInView.SESSION_PICKER ? 'primary' : 'default'}

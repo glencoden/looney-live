@@ -1,1 +1,0 @@
-export const isIPad = () => navigator.userAgent.match(/Mac/) && navigator.maxTouchPoints && navigator.maxTouchPoints > 2
