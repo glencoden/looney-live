@@ -68,7 +68,6 @@ const App: React.FC = () => {
                 .then((result) => {
                     // no data if session isn't running yet
                     if (result.data === null) {
-                        console.log(result.error)
                         return
                     }
 

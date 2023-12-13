@@ -10,7 +10,7 @@ import IconButton from '@mui/material/IconButton'
 import ListItem from '@mui/material/ListItem'
 import TextField from '@mui/material/TextField'
 import CircularProgress from '@mui/material/CircularProgress'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
@@ -50,21 +50,29 @@ enum LoggedInView {
     SESSION_PICKER = 'session-picker',
 }
 
-const App: React.FC = () => {
-    // List of lips extendable by socket payload
-    const [ items, setItems ] = useState<TLip[]>([])
+const EMPTY_ITEMS: TLip[] = []
 
+const App: React.FC = () => {
     const [ activeSession, setActiveSession ] = useState<TSession | null>(null)
 
     // GET lips
 
-    const { data: lipsResult, isLoading } = useLipsQuery(activeSession?.id, undefined, activeSession !== null)
+    const {
+        data: lipsResult,
+        isLoading,
+        refetch,
+    } = useLipsQuery(activeSession?.id, undefined, activeSession !== null)
 
-    const lips = lipsResult?.data?.lips ?? null
+    const items = (activeSession !== null && lipsResult?.data?.lips)
+        ? lipsResult.data.lips
+        : EMPTY_ITEMS
 
-    if (lips !== null && lips !== items) {
-        setItems(lips)
-    }
+    // Provide reference in socket callback to refetch when lip is added/removed
+    const refetchItemsRef = useRef(refetch)
+
+    useEffect(() => {
+        refetchItemsRef.current = refetch
+    }, [ refetch ])
 
     // Login form data
 
@@ -115,12 +123,14 @@ const App: React.FC = () => {
 
         const socket = requestService.openSocket()
 
-        socket.on(SocketEvents.SERVER_BOSS_ADD_LIP, (lip: TLip) => {
-            setItems((prevItems) => [ ...prevItems, lip ])
-        })
+        socket.on(SocketEvents.SERVER_BOSS_ADD_LIP, refetchItemsRef.current)
 
         socket.on(SocketEvents.SERVER_ALL_SESSION_START, (session: TSession) => {
             setActiveSession(session)
+        })
+
+        socket.on(SocketEvents.SERVER_ALL_SESSION_END, () => {
+            setActiveSession(null)
         })
 
         socket.emit(SocketEvents.BOSS_SERVER_JOIN, (result: ServerResult<TSession>) => {

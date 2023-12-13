@@ -112,7 +112,7 @@ const SongLip: React.FC<TLip> = ({ songId, updatedAt, guestName, status, message
                             {guestName}
                         </Typography>
 
-                        <Typography>
+                        <Typography sx={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                             {song.artist} - {song.title}
                         </Typography>
                     </>

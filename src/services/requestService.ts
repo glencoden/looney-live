@@ -31,7 +31,7 @@ class RequestService {
         } else {
             switch (import.meta.env.VITE_HOST_ENV) {
                 case 'local':
-                    this.baseUrl = 'http://localhost:5555'
+                    this.baseUrl = 'http://127.0.0.1:5555'
                     break
                 case 'develop':
                     this.baseUrl = 'http://looneyapi.lan'
@@ -44,7 +44,6 @@ class RequestService {
                     break
             }
         }
-        this.socket = io(this.baseUrl, { rejectUnauthorized: false })
     }
 
     getSocket() {
