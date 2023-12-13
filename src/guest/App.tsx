@@ -76,12 +76,6 @@ const App: React.FC = () => {
                     setSessionId(result.data.sessionId)
                     setSongs(result.data.songs)
                     setLips(result.data.lips)
-
-                    if (socket === null) {
-                        return
-                    }
-
-                    socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid()) // maps guest guid to socket
                 })
         }
 
@@ -117,6 +111,21 @@ const App: React.FC = () => {
             })
         })
     }, [])
+
+    // maps guest guid to socket
+    useEffect(() => {
+        if (sessionId === null) {
+            return
+        }
+
+        const socket = requestService.getSocket()
+
+        if (socket === null) {
+            return
+        }
+
+        socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid())
+    }, [ sessionId ])
 
     const onSongSelect = useCallback((song: TSong) => {
         const selectedLips = lips?.filter((lip) => lip.status !== LipStatus.DONE && lip.status !== LipStatus.DELETED)
