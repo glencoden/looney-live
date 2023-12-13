@@ -7,7 +7,13 @@
         "dev": "vite --host",
         "build": "tsc && vite build",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "build:boss:local": "tsc && vite build --mode boss.local && mkdir -p ../looney-boss && rm -rf ../looney-boss/* && cp -r dist/* ../looney-boss",
+        "build:guest:local": "tsc && vite build --mode guest.local && mkdir -p ../looney-guest && rm -rf ../looney-guest/* && cp -r dist/* ../looney-guest",
+        "build:local": "npm run build:boss:local && npm run build:guest:local",
+        "build:boss:dev": "tsc && vite build --mode boss.dev && mkdir -p ../looney-boss && rm -rf ../looney-boss/* && cp -r dist/* ../looney-boss",
+        "build:guest:dev": "tsc && vite build --mode guest.dev && mkdir -p ../looney-guest && rm -rf ../looney-guest/* && cp -r dist/* ../looney-guest",
+        "build:dev": "npm run build:boss:dev && npm run build:guest:dev"
     },
     "dependencies": {
         "@emotion/react": "^11.11.1",
@@ -16,10 +22,9 @@
         "@mui/icons-material": "^5.14.9",
         "@mui/material": "^5.14.10",
         "@mui/x-date-pickers": "^6.15.0",
+        "@tanstack/react-query": "^5.13.4",
+        "@tanstack/react-query-devtools": "^5.13.4",
         "date-fns": "^2.30.0",
-        "dayjs": "^1.11.10",
-        "install": "^0.13.0",
-        "npm": "^10.1.0",
         "react": "^18.2.0",
         "react-dnd": "^16.0.1",
         "react-dnd-html5-backend": "^16.0.1",

@@ -1,8 +1,7 @@
 import { TJson } from '../types/TJson.ts'
-import { TLip } from '../types/TLip.ts'
 
 const STORAGE_KEYS = {
-    SESSION_INDEXES: 'LOONEY.SESSION_INDEXES',
+    SESSION_GUID: 'LOONEY.SESSION_GUID',
     GUEST_GUID: 'LOONEY.GUEST_GUID',
 }
 
@@ -32,31 +31,20 @@ class StorageService {
         return result
     }
 
-    getSessionIndexes(sessionId: number): { [key: string]: number } {
-        const sessionIndexes = this._get(STORAGE_KEYS.SESSION_INDEXES) || {}
-
-        return sessionIndexes[sessionId] || {}
-    }
-
-    setSessionIndexes(sessionId: number, items: TLip[]): void {
-        const currentIndexes = items.reduce((result: { [key: string]: number }, item) => ({
-            ...result,
-            [item.id]: item.index,
-        }), {})
-
-        const sessionIndexes = this._get(STORAGE_KEYS.SESSION_INDEXES) || {}
-
-        sessionIndexes[sessionId] = currentIndexes
-
-        this._set(STORAGE_KEYS.SESSION_INDEXES, sessionIndexes)
-    }
-
     getGuestGuid(): string {
         return this._get(STORAGE_KEYS.GUEST_GUID) || ''
     }
 
     setGuestGuid(guid: string): void {
         this._set(STORAGE_KEYS.GUEST_GUID, guid)
+    }
+
+    getSessionGuid(): string {
+        return this._get(STORAGE_KEYS.SESSION_GUID) || ''
+    }
+
+    setSessionGuid(guid: string): void {
+        this._set(STORAGE_KEYS.SESSION_GUID, guid)
     }
 }
 

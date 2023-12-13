@@ -1,0 +1,1 @@
+export const isIPadNotDesktop = () => navigator.userAgent.match(/Mac/) && navigator.maxTouchPoints && navigator.maxTouchPoints > 2

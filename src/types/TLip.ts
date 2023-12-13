@@ -5,9 +5,13 @@ export type TLip = {
     sessionId: number
     songId: number
     guestGuid: string
-    date: string
-    name: string
+    guestName: string
     status: LipStatus
-    message?: string | null
-    index: number // client extension for sorting
+    index: number
+    createdAt: Date
+    updatedAt: Date
+    deletedAt: Date | null
+    liveAt: Date | null
+    doneAt: Date | null
+    message?: string
 }

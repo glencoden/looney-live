@@ -14,35 +14,41 @@ import { de } from 'date-fns/locale'
 
 export const SONG_LIP_WIDTH = 360
 
-const getTimeDistance = (date: string): string => {
+const getTimeDistance = (date: Date): string => {
     return formatDistance(new Date(date), new Date(), { addSuffix: true, locale: de })
 }
 
-const SongLip: React.FC<TLip> = ({ songId, date, name, status, message }) => {
-    const [ timeDistance, setTimeDistance ] = useState(() => getTimeDistance(date))
+const SongLip: React.FC<TLip> = ({ songId, updatedAt, guestName, status, message }) => {
+    const [ timeDistance, setTimeDistance ] = useState(() => getTimeDistance(updatedAt))
     const [ song, setSong ] = useState<TSong | null>(null)
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setTimeDistance(getTimeDistance(date))
+            setTimeDistance(getTimeDistance(updatedAt))
         }, 1000)
 
         return () => {
             clearInterval(interval)
         }
-    }, [ date, setTimeDistance ])
+    }, [ updatedAt ])
 
     useEffect(() => {
         requestService.getSong(songId)
             .then((response) => {
                 setSong(response.data[0])
             })
-    }, [ songId, setSong ])
+    }, [ songId ])
 
     const isGuestLiveCall = import.meta.env.VITE_BUILD_TYPE === 'guest' && status === LipStatus.LIVE
 
     return (
-        <Card sx={{ width: `${SONG_LIP_WIDTH}px`, border: isGuestLiveCall ? '2px solid deeppink' : 'none' }}>
+        <Card
+            sx={{
+                width: `${SONG_LIP_WIDTH}px`,
+                border: isGuestLiveCall ? '2px solid deeppink' : 'none',
+                userSelect: 'none',
+            }}
+        >
             <CardContent>
                 {song === null ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -103,10 +109,10 @@ const SongLip: React.FC<TLip> = ({ songId, date, name, status, message }) => {
                         </Typography>
 
                         <Typography variant="overline">
-                            {name}
+                            {guestName}
                         </Typography>
 
-                        <Typography>
+                        <Typography sx={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                             {song.artist} - {song.title}
                         </Typography>
                     </>

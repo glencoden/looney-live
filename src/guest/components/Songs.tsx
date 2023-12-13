@@ -6,7 +6,7 @@ import { TSong } from '../../types/TSong.ts'
 
 type Props = {
     songs: TSong[]
-    onSongSelect: React.Dispatch<React.SetStateAction<TSong | null>>
+    onSongSelect: (song: TSong) => void
 }
 
 const Songs: React.FC<Props> = ({ songs, onSongSelect }) => {
