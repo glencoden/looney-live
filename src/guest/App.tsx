@@ -124,7 +124,16 @@ const App: React.FC = () => {
             return
         }
 
-        socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid())
+        // join at random point within 10 seconds to reduce number of simultaneous requests of all waiting guests
+        const randomTimeout = Math.round(Math.random() * 1000 * 10)
+
+        const timeoutId = setTimeout(() => {
+            socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid())
+        }, randomTimeout)
+
+        return () => {
+            clearTimeout(timeoutId)
+        }
     }, [ sessionId ])
 
     const onSongSelect = useCallback((song: TSong) => {
