@@ -15,7 +15,8 @@ import LipEditor from './components/LipEditor.tsx'
 import Lips from './components/Lips.tsx'
 import Songs from './components/Songs.tsx'
 
-const SESSION_REFETCH_INTERVAL = 1000 * 60
+const PRE_SESSION_REFETCH_INTERVAL = 1000 * 5
+const ACTIVE_SESSION_REFETCH_INTERVAL = 1000 * 60
 
 const App: React.FC = () => {
     const [ sessionId, setSessionId ] = useState<TSession['id'] | null>(null)
@@ -70,12 +71,11 @@ const App: React.FC = () => {
                 return
             }
 
-            sessionStartTimeoutIdRef.current = setTimeout(onSessionStart, SESSION_REFETCH_INTERVAL)
-
             requestService.getGuestData(sessionGuid, guestGuid)
                 .then((result) => {
                     // no data if session isn't running yet
                     if (result.data === null) {
+                        sessionStartTimeoutIdRef.current = setTimeout(onSessionStart, PRE_SESSION_REFETCH_INTERVAL)
                         return
                     }
 
@@ -84,6 +84,8 @@ const App: React.FC = () => {
                     setSessionId(result.data.sessionId)
                     setSongs(result.data.songs)
                     setLips(result.data.lips)
+
+                    sessionStartTimeoutIdRef.current = setTimeout(onSessionStart, ACTIVE_SESSION_REFETCH_INTERVAL)
                 })
         }
 
