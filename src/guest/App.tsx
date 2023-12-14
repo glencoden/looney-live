@@ -2,20 +2,24 @@ import Box from '@mui/material/Box'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { LipStatus } from '../boss/enums/LipStatus.ts'
-import { SocketGuestToServer } from '../enums/SocketGuestToServer.ts'
-import { SocketServerToGuest } from '../enums/SocketServerToGuest.ts'
+import { SocketEvents } from '../enums/SocketEvents.ts'
+import useWakeLock from '../hooks/useWakeLock.ts'
 import { requestService } from '../services/requestService.ts'
 import { storageService } from '../services/storageService.ts'
 import { TLip } from '../types/TLip.ts'
+import { TSession } from '../types/TSession.ts'
 import { TSong } from '../types/TSong.ts'
 import LipEditor from './components/LipEditor.tsx'
 import Lips from './components/Lips.tsx'
 import Songs from './components/Songs.tsx'
 
+const PRE_SESSION_REFETCH_INTERVAL = 1000 * 5
+const ACTIVE_SESSION_REFETCH_INTERVAL = 1000 * 60
+
 const App: React.FC = () => {
-    const [ sessionId, setSessionId ] = useState<number | null>(null)
+    const [ sessionId, setSessionId ] = useState<TSession['id'] | null>(null)
     const [ songs, setSongs ] = useState<TSong[] | null>()
     const [ lips, setLips ] = useState<TLip[] | null>(null)
 
@@ -23,90 +27,140 @@ const App: React.FC = () => {
 
     const [ selectedSong, setSelectedSong ] = useState<TSong | null>(null)
 
+    // Wake lock
+
+    useWakeLock(1000 * 60 * 3)
+
+    // Sign up for session, receive guest guid
+
+    const sessionStartTimeoutIdRef = useRef<number | undefined>()
+
     useEffect(() => {
+        // Set session guid from url parameter to local storage
+
+        const urlParams = new URLSearchParams(location.search)
+
+        const sessionGuid = urlParams.get('session')
+
+        if (sessionGuid !== null && sessionGuid.length > 0) {
+            storageService.setSessionGuid(sessionGuid)
+
+            history.replaceState({}, document.title, location.origin) // remove session guid url parameter after it's been stored
+        }
+
+        // Open socket if it isn't already open
+
+        let socket = requestService.getSocket()
+
+        const isSocketAlreadyOpen = socket !== null
+
+        if (!isSocketAlreadyOpen) {
+            socket = requestService.openSocket()
+        }
+
+        // Session start callback
+
         const onSessionStart = () => {
+            clearTimeout(sessionStartTimeoutIdRef.current)
+
+            const sessionGuid = storageService.getSessionGuid()
             const guestGuid = storageService.getGuestGuid()
 
-            requestService.getGuestData(guestGuid)
-                .then((response) => {
-                    if (!response.success || !response.data) {
-                        console.log(response.message)
+            if (sessionGuid.length === 0) {
+                // TODO: handle this case properly
+                return
+            }
+
+            requestService.getGuestData(sessionGuid, guestGuid)
+                .then((result) => {
+                    // no data if session isn't running yet
+                    if (result.data === null) {
+                        sessionStartTimeoutIdRef.current = setTimeout(onSessionStart, PRE_SESSION_REFETCH_INTERVAL)
                         return
                     }
-                    storageService.setGuestGuid(response.data.guid)
 
-                    setSessionId(response.data.sessionId)
-                    setSongs(response.data.songs)
-                    setLips(response.data.lips)
+                    storageService.setGuestGuid(result.data.guid)
+
+                    setSessionId(result.data.sessionId)
+                    setSongs(result.data.songs)
+                    setLips(result.data.lips)
+
+                    sessionStartTimeoutIdRef.current = setTimeout(onSessionStart, ACTIVE_SESSION_REFETCH_INTERVAL)
                 })
         }
 
         onSessionStart()
 
-        // TODO: poll socket
+        // Add socket listeners if it isn't already open
+
+        if (isSocketAlreadyOpen || socket === null) {
+            return
+        }
+
+        socket.on(SocketEvents.SERVER_ALL_SESSION_START, onSessionStart)
+
+        socket.on(SocketEvents.SERVER_ALL_SESSION_END, () => {
+            setSessionId(null)
+            setSongs(null)
+            setLips(null)
+        })
+
+        socket.on(SocketEvents.SERVER_GUEST_UPDATE_LIP, (lip: TLip) => {
+            // TODO: trigger stage call
+
+            setLips((prevLips) => {
+                if (prevLips === null) {
+                    return null
+                }
+                return prevLips.map((prevLip) => {
+                    if (prevLip.id === lip.id) {
+                        return lip
+                    }
+                    return prevLip
+                })
+            })
+        })
+    }, [])
+
+    // maps guest guid to socket
+    useEffect(() => {
+        if (sessionId === null) {
+            return
+        }
+
         const socket = requestService.getSocket()
 
         if (socket === null) {
             return
         }
 
-        socket.on(SocketServerToGuest.SESSION_START, onSessionStart)
+        // join at random point to reduce number of simultaneous requests of all waiting guests
+        const randomTimeout = Math.round(Math.random() * 1000 * 5)
 
-        socket.on(SocketServerToGuest.SESSION_END, () => {
-            setSessionId(null)
-            setSongs(null)
-            setLips(null)
-        })
-    }, [ setSessionId, setSongs, setLips ])
+        const timeoutId = setTimeout(() => {
+            socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid())
+        }, randomTimeout)
 
-    useEffect(() => {
-        const socket = requestService.getSocket()
+        return () => {
+            clearTimeout(timeoutId)
+        }
+    }, [ sessionId ])
 
-        if (socket === null || sessionId === null) {
+    const onSongSelect = useCallback((song: TSong) => {
+        const selectedLips = lips?.filter((lip) => lip.status !== LipStatus.DONE && lip.status !== LipStatus.DELETED)
+
+        if (
+            selectedLips &&
+            (
+                selectedLips.length >= 3 ||
+                selectedLips.find((lip) => lip.songId === song.id)
+            )
+        ) {
             return
         }
 
-        socket.emit(SocketGuestToServer.GUEST_JOIN, storageService.getGuestGuid()) // connect guest guid to socket
-
-        socket.on(SocketServerToGuest.UPDATE_LIP, (lip: TLip) => {
-            setLips((prevLips) => {
-                if (prevLips === null) {
-                    return null
-                }
-                const index = prevLips.findIndex((prevLip) => prevLip.id === lip.id)
-
-                if (index === -1) {
-                    return prevLips
-                }
-
-                if (lip.status === LipStatus.DONE) {
-                    return prevLips.filter((prevLip) => prevLip.id !== lip.id)
-                }
-
-                if (lip.status === LipStatus.LIVE) {
-                    // TODO: trigger stage call!
-                }
-                const update = [ ...prevLips ]
-
-                update[index] = lip
-
-                return update
-            })
-        })
-
-        socket.on(SocketServerToGuest.DELETE_LIP, ({ data, message }: { data: TLip, message: string }) => {
-            setLips((prevLips) => {
-                if (prevLips === null) {
-                    return null
-                }
-
-                return prevLips.filter((prevLip) => prevLip.id !== data.id)
-            })
-
-            // TODO: prompt with message
-            console.log(message)
-        })
-    }, [ sessionId, setLips ])
+        setSelectedSong(song)
+    }, [ lips ])
 
     const onLipEdited = useCallback((lip: TLip | null) => {
         if (lip !== null) {
@@ -114,7 +168,7 @@ const App: React.FC = () => {
             setActiveTab(1)
         }
         setSelectedSong(null)
-    }, [ setLips, setActiveTab, setSelectedSong ])
+    }, [])
 
     if (sessionId === null) {
         return (
@@ -123,11 +177,15 @@ const App: React.FC = () => {
                     width: '100%',
                     height: '100dvh',
                     display: 'flex',
+                    flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    gap: 3,
+                    padding: 5,
                 }}
             >
-                <Typography variant="h5">Schön dass du dabei bist! Die Session fängt bald an.</Typography>
+                <Typography variant="h5">Schön dass du dabei bist!</Typography>
+                <Typography>Die Session fängt bald an.</Typography>
             </Box>
         )
     }
@@ -165,7 +223,7 @@ const App: React.FC = () => {
                 {activeTab === 0 && (
                     <Songs
                         songs={songs ?? []}
-                        onSongSelect={setSelectedSong}
+                        onSongSelect={onSongSelect}
                     />
                 )}
 

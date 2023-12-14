@@ -17,6 +17,7 @@ jobs:
         run: npm run build
         env:
           VITE_BUILD_TYPE: boss
+          VITE_HOST_ENV: staging
       - name: copy ssh key
         run: |
           mkdir -p ~/.ssh
@@ -34,6 +35,7 @@ jobs:
           cd dist/
           scp -r * root@${{ secrets.SERVER_ADDRESS_STAGING }}:/root/apps/looney-boss
   deploy-guest-to-staging:
+    needs: deploy-boss-to-staging
     runs-on: ubuntu-latest
     steps:
       - name: check out repository
@@ -46,6 +48,7 @@ jobs:
         run: npm run build
         env:
           VITE_BUILD_TYPE: guest
+          VITE_HOST_ENV: staging
       - name: copy ssh key
         run: |
           mkdir -p ~/.ssh

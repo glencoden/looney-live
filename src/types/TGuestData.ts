@@ -2,8 +2,8 @@ import { TLip } from './TLip.ts'
 import { TSong } from './TSong.ts'
 
 export type TGuestData = {
-    guid: string
     sessionId: number
+    guid: string
     songs: TSong[]
     lips: TLip[]
 }

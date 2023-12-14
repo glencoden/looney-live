@@ -1,11 +1,14 @@
 import styled from '@emotion/styled'
+import CircularProgress from '@mui/material/CircularProgress'
 import ListItem from '@mui/material/ListItem'
+import Box from '@mui/material/Box'
 import React from 'react'
 import { useDrag, useDrop } from 'react-dnd'
-import { requestService } from '../../services/requestService.ts'
 import { TLip } from '../../types/TLip.ts'
 import { DragItemType } from '../enums/DragItemType.ts'
 import { LipStatus } from '../enums/LipStatus.ts'
+import { useLipMutation } from '../requests/mutations/useLipMutation.ts'
+import { useLipsQuery } from '../requests/queries/useLipsQuery.ts'
 
 const DELETE_MESSAGES = {
     TOO_OFTEN: 'Diesen Song haben wir heute schon zu oft gehört. Damit die Party abwechslungsreich bleibt, kommst du damit heute nicht dran.',
@@ -23,7 +26,6 @@ type StyledDropAreaProps = {
 
 type Props = {
     item: TLip
-    setItems: React.Dispatch<React.SetStateAction<TLip[]>>
     children?: React.ReactNode
 }
 
@@ -63,7 +65,13 @@ const StyledDropBelowArea = styled.div<StyledDropAreaProps>`
     border-bottom: ${(props) => props.isOver ? '2px solid blue' : '2px solid transparent'};
 `
 
-const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
+const DragItem: React.FC<Props> = ({ item, children }) => {
+    const { data: lipsResult, isLoading: isLipsLoading } = useLipsQuery()
+
+    const currentItems = lipsResult?.data?.lips ?? null
+
+    const { mutate, isPending } = useLipMutation()
+
     const [ dropAboveCollection, dropAboveRef ] = useDrop({
         accept: DragItemType.LIP,
         drop: () => ({
@@ -96,6 +104,7 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
             const dropResult = monitor.getDropResult() as DropResult
 
             if (
+                currentItems === null ||
                 !dropResult ||
                 (
                     dropResult.status === item.status &&
@@ -111,71 +120,73 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
             const dropIndex = dropResult.index
             const dropStatus = dropResult.status
 
-            setItems((currentItems) => {
-                console.log('drag', dragIndex, dragStatus)
-                console.log('drop', dropIndex, dropStatus)
-                console.log('items', JSON.stringify(currentItems, null, 4))
+            if (
+                (dropStatus === LipStatus.LIVE && currentItems.find((currentItem) => currentItem.status === LipStatus.LIVE)) ||
+                (dropStatus === LipStatus.DONE && dragStatus !== LipStatus.LIVE)
+            ) {
+                return
+            }
 
-                if (
-                    (dropStatus === LipStatus.LIVE && currentItems.findIndex((currentItem) => currentItem.status === LipStatus.LIVE) > -1) ||
-                    (dropStatus === LipStatus.DONE && dragStatus !== LipStatus.LIVE)
-                ) {
-                    return currentItems
-                }
+            const optimisticResult = currentItems.map((currentItem) => {
+                const currentIndex = currentItem.index
+                const currentStatus = currentItem.status
 
-                return currentItems.map((currentItem) => {
-                    const currentIndex = currentItem.index
-                    const currentStatus = currentItem.status
+                const isDragItem = currentItem.id === item.id
 
-                    const isDragItem = currentItem.id === item.id
+                if (isDragItem) {
+                    let index = dropIndex
 
-                    if (isDragItem) {
-                        let index = dropIndex
-
-                        if (dropStatus === dragStatus && dragIndex < dropIndex) {
-                            index--
-                        }
-
-                        const update = {
-                            ...currentItem,
-                            index,
-                            status: dropStatus,
-                        }
-
-                        // TODO: handle loading status
-                        if (dropStatus === LipStatus.DELETED) {
-                            // TODO: defer deletion with message selection
-                            requestService.deleteLip(update.id, DELETE_MESSAGES.ERROR)
-                                .then(console.log)
-                        } else {
-                            requestService.updateLip(update)
-                                .then(console.log)
-                        }
-
-                        return update
-                    }
-
-                    let index = currentIndex
-
-                    if (currentStatus === dragStatus && currentIndex > dragIndex) {
+                    if (dropStatus === dragStatus && dragIndex < dropIndex) {
                         index--
-                    }
-
-                    if (currentStatus === dropStatus && currentIndex >= dropIndex) {
-                        index++
                     }
 
                     return {
                         ...currentItem,
                         index,
+                        status: dropStatus,
                     }
-                })
+                }
+
+                let index = currentIndex
+
+                if (currentStatus === dragStatus && currentIndex > dragIndex) {
+                    index--
+                }
+
+                if (currentStatus === dropStatus && currentIndex >= dropIndex) {
+                    index++
+                }
+
+                return {
+                    ...currentItem,
+                    index,
+                }
+            })
+
+            let message = ''
+
+            if (dropStatus === LipStatus.DELETED) {
+                message = DELETE_MESSAGES.TOO_LATE // TODO: defer deletion with message selection
+            }
+
+            mutate({
+                lipUpdate: {
+                    id: item.id,
+                    dragIndex,
+                    dragStatus,
+                    dropIndex,
+                    dropStatus,
+                    message,
+                },
+                optimisticResult,
             })
         },
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
         }),
-    }), [ item ])
+    }), [ item, currentItems, mutate ])
+
+    const showLoading = isLipsLoading || isPending
 
     return (
         <StyledWrapper
@@ -183,7 +194,11 @@ const DragItem: React.FC<Props> = ({ item, setItems, children }) => {
             isDragging={dragCollection.isDragging}
         >
             <ListItem>
-                {children}
+                {showLoading ? (
+                    <Box sx={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <CircularProgress />
+                    </Box>
+                ) : children}
             </ListItem>
 
             <StyledDropAboveArea

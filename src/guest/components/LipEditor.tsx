@@ -28,7 +28,7 @@ const LipEditor: React.FC<Props> = ({ song, onLipEdited }) => {
             return
         }
 
-        requestService.createGuestLip(storageService.getGuestGuid(), song.id, name)
+        requestService.createGuestLip(storageService.getSessionGuid(), storageService.getGuestGuid(), song.id, name)
             .then((response) => {
                 onLipEdited(response.data)
             })

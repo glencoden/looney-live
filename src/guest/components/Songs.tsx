@@ -6,7 +6,7 @@ import { TSong } from '../../types/TSong.ts'
 
 type Props = {
     songs: TSong[]
-    onSongSelect: React.Dispatch<React.SetStateAction<TSong | null>>
+    onSongSelect: (song: TSong) => void
 }
 
 const Songs: React.FC<Props> = ({ songs, onSongSelect }) => {
@@ -19,14 +19,19 @@ const Songs: React.FC<Props> = ({ songs, onSongSelect }) => {
                 Wähle einen Songs aus
             </Typography>
 
-            <List>
+            <List sx={{ width: '100vw' }}>
                 {songs.map((song) => (
                     <ListItem
                         key={song.id}
                         onClick={() => onSongSelect(song)}
+                        sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}
                     >
-                        <Typography>
-                            {`${song.artist} - ${song.title}`}
+                        <Typography sx={{ alignSelf: 'start' }}>
+                            {song.artist}
+                        </Typography>
+
+                        <Typography sx={{ alignSelf: 'start' }}>
+                            {song.title}
                         </Typography>
                     </ListItem>
                 ))}
