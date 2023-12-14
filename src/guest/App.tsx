@@ -2,7 +2,7 @@ import Box from '@mui/material/Box'
 import Tab from '@mui/material/Tab'
 import Tabs from '@mui/material/Tabs'
 import Typography from '@mui/material/Typography'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { LipStatus } from '../boss/enums/LipStatus.ts'
 import { SocketEvents } from '../enums/SocketEvents.ts'
 import useWakeLock from '../hooks/useWakeLock.ts'
@@ -14,6 +14,8 @@ import { TSong } from '../types/TSong.ts'
 import LipEditor from './components/LipEditor.tsx'
 import Lips from './components/Lips.tsx'
 import Songs from './components/Songs.tsx'
+
+const SESSION_REFETCH_INTERVAL = 1000 * 60
 
 const App: React.FC = () => {
     const [ sessionId, setSessionId ] = useState<TSession['id'] | null>(null)
@@ -29,6 +31,8 @@ const App: React.FC = () => {
     useWakeLock(1000 * 60 * 3)
 
     // Sign up for session, receive guest guid
+
+    const sessionStartTimeoutIdRef = useRef<number | undefined>()
 
     useEffect(() => {
         // Set session guid from url parameter to local storage
@@ -56,6 +60,8 @@ const App: React.FC = () => {
         // Session start callback
 
         const onSessionStart = () => {
+            clearTimeout(sessionStartTimeoutIdRef.current)
+
             const sessionGuid = storageService.getSessionGuid()
             const guestGuid = storageService.getGuestGuid()
 
@@ -63,6 +69,8 @@ const App: React.FC = () => {
                 // TODO: handle this case properly
                 return
             }
+
+            sessionStartTimeoutIdRef.current = setTimeout(onSessionStart, SESSION_REFETCH_INTERVAL)
 
             requestService.getGuestData(sessionGuid, guestGuid)
                 .then((result) => {
@@ -124,8 +132,8 @@ const App: React.FC = () => {
             return
         }
 
-        // join at random point within 10 seconds to reduce number of simultaneous requests of all waiting guests
-        const randomTimeout = Math.round(Math.random() * 1000 * 10)
+        // join at random point to reduce number of simultaneous requests of all waiting guests
+        const randomTimeout = Math.round(Math.random() * 1000 * 5)
 
         const timeoutId = setTimeout(() => {
             socket.emit(SocketEvents.GUEST_SERVER_JOIN, storageService.getGuestGuid())

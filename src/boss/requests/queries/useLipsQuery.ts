@@ -29,5 +29,6 @@ export const useLipsQuery = (sessionId?: number, lipId?: number, enabled = true)
         queryKey,
         queryFn,
         enabled,
+        refetchInterval: 1000 * 60,
     })
 }
