@@ -102,7 +102,7 @@ const SongLip: React.FC<TLip> = ({ songId, updatedAt, guestName, status, message
 
                         <Typography
                             variant="caption"
-                            color="secondary"
+                            color="secondary.dark"
                             sx={{ float: 'right' }}
                         >
                             {timeDistance}
