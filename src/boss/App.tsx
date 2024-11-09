@@ -450,6 +450,8 @@ const App: React.FC = () => {
                                 height: `calc(100dvh - ${START_FIELD_HEIGHT}px)`,
                                 bgcolor: 'background.paper',
                                 overflow: 'scroll',
+                                border: '2px solid pink',
+                                paddingRight: '54px'
                             }}
                         >
                             <DropTarget status={LipStatus.IDLE}>
