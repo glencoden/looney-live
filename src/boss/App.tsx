@@ -1,15 +1,17 @@
-import LogoutIcon from '@mui/icons-material/Logout'
-import LoginIcon from '@mui/icons-material/Login'
-import ListIcon from '@mui/icons-material/List'
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
 import EditCalendarIcon from '@mui/icons-material/EditCalendar'
+import ListIcon from '@mui/icons-material/List'
+import LoginIcon from '@mui/icons-material/Login'
+import LogoutIcon from '@mui/icons-material/Logout'
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
 import Divider from '@mui/material/Divider'
 import IconButton from '@mui/material/IconButton'
+import List from '@mui/material/List'
 import ListItem from '@mui/material/ListItem'
 import TextField from '@mui/material/TextField'
-import CircularProgress from '@mui/material/CircularProgress'
+import Typography from '@mui/material/Typography'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
@@ -27,8 +29,6 @@ import SessionPicker from './components/SessionPicker.tsx'
 import { LipStatus } from './enums/LipStatus.ts'
 import { isIPadNotDesktop } from './helpers/isIPadNotDesktop.ts'
 import { useLipsQuery } from './requests/queries/useLipsQuery.ts'
-import Typography from '@mui/material/Typography'
-import List from '@mui/material/List'
 
 const dndBackend = isIPadNotDesktop() ? TouchBackend : HTML5Backend
 
@@ -63,9 +63,10 @@ const App: React.FC = () => {
         refetch,
     } = useLipsQuery(activeSession?.id, undefined, activeSession !== null)
 
-    const items = (activeSession !== null && lipsResult?.data?.lips)
-        ? lipsResult.data.lips
-        : EMPTY_ITEMS
+    const items =
+        activeSession !== null && lipsResult?.data?.lips
+            ? lipsResult.data.lips
+            : EMPTY_ITEMS
 
     // Provide reference in socket callback to refetch when lip is added/removed
     const refetchItemsRef = useRef(refetch)
@@ -83,12 +84,18 @@ const App: React.FC = () => {
 
     // Router
 
-    const hasLiveSessionWidth = window.innerWidth >= 820
-    const defaultLoggedOutView = hasLiveSessionWidth ? LoggedOutView.LOGIN : LoggedOutView.LIPS
-    const defaultLoggedInView = hasLiveSessionWidth ? LoggedInView.LIVE : LoggedInView.SESSION_PICKER
+    const hasLiveSessionWidth = window.innerWidth >= 800
+    const defaultLoggedOutView = hasLiveSessionWidth
+        ? LoggedOutView.LOGIN
+        : LoggedOutView.LIPS
+    const defaultLoggedInView = hasLiveSessionWidth
+        ? LoggedInView.LIVE
+        : LoggedInView.SESSION_PICKER
 
-    const [ loggedOutView, setLoggedOutView ] = useState<LoggedOutView>(defaultLoggedOutView)
-    const [ loggedInView, setLoggedInView ] = useState<LoggedInView>(defaultLoggedInView)
+    const [ loggedOutView, setLoggedOutView ] =
+        useState<LoggedOutView>(defaultLoggedOutView)
+    const [ loggedInView, setLoggedInView ] =
+        useState<LoggedInView>(defaultLoggedInView)
 
     // Reset routes when login status changes
     useEffect(() => {
@@ -133,30 +140,37 @@ const App: React.FC = () => {
             setActiveSession(null)
         })
 
-        socket.emit(SocketEvents.BOSS_SERVER_JOIN, (result: ServerResult<TSession>) => {
-            if (result.data === null) {
-                return
-            }
-            setActiveSession(result.data)
-        })
+        socket.emit(
+            SocketEvents.BOSS_SERVER_JOIN,
+            (result: ServerResult<TSession>) => {
+                if (result.data === null) {
+                    return
+                }
+                setActiveSession(result.data)
+            },
+        )
     }, [])
 
     // Login callbacks
 
-    const onLogin = useCallback((username: string, password: string) => {
-        setErrorMessage(null)
+    const onLogin = useCallback(
+        (username: string, password: string) => {
+            setErrorMessage(null)
 
-        requestService.login(username, password)
-            .then((isLoggedIn) => {
-                setUsername('')
-                setPassword('')
-                setIsLoggedIn(isLoggedIn)
-            })
-            .catch((err) => {
-                console.warn(err)
-                setErrorMessage('Das hat nicht geklappt.')
-            })
-    }, [ setErrorMessage, setIsLoggedIn ])
+            requestService
+                .login(username, password)
+                .then((isLoggedIn) => {
+                    setUsername('')
+                    setPassword('')
+                    setIsLoggedIn(isLoggedIn)
+                })
+                .catch((err) => {
+                    console.warn(err)
+                    setErrorMessage('Das hat nicht geklappt.')
+                })
+        },
+        [ setErrorMessage, setIsLoggedIn ],
+    )
 
     const onLogout = useCallback(() => {
         const isLoggedOut = requestService.logout()
@@ -168,9 +182,10 @@ const App: React.FC = () => {
     }, [])
 
     useEffect(() => {
-        const reference: { timeoutId: ReturnType<typeof setTimeout> | undefined } = {
-            timeoutId: undefined,
-        }
+        const reference: { timeoutId: ReturnType<typeof setTimeout> | undefined } =
+            {
+                timeoutId: undefined,
+            }
 
         const checkLogin = () => {
             setIsLoggedIn(requestService.isLoggedIn())
@@ -187,7 +202,14 @@ const App: React.FC = () => {
 
     if (isLoading) {
         return (
-            <Box sx={{ height: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Box
+                sx={{
+                    height: '100dvh',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
                 <CircularProgress />
             </Box>
         )
@@ -227,23 +249,28 @@ const App: React.FC = () => {
                     <>
                         <ViewNav />
 
-                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                            {items.length === 0
-                                ? (
-                                    <Box sx={{ height: '100dvh', display: 'flex', alignItems: 'center' }}>
-                                        <Typography>Noch keine Lips</Typography>
-                                    </Box>
-                                )
-                                : (
-                                    <List sx={{ paddingTop: 9 }}>
-                                        {items.map((item) => (
-                                            <ListItem key={item.id}>
-                                                <SongLip {...item} />
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                )
-                            }
+                        <Box
+                            sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                        >
+                            {items.length === 0 ? (
+                                <Box
+                                    sx={{
+                                        height: '100dvh',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <Typography>Noch keine Lips</Typography>
+                                </Box>
+                            ) : (
+                                <List sx={{ paddingTop: 9 }}>
+                                    {items.map((item) => (
+                                        <ListItem key={item.id}>
+                                            <SongLip {...item} />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            )}
                         </Box>
                     </>
                 )
@@ -307,16 +334,15 @@ const App: React.FC = () => {
             )}
 
             <IconButton
-                color={loggedInView === LoggedInView.SESSION_PICKER ? 'primary' : 'default'}
+                color={
+                    loggedInView === LoggedInView.SESSION_PICKER ? 'primary' : 'default'
+                }
                 onClick={() => setLoggedInView(LoggedInView.SESSION_PICKER)}
             >
                 <EditCalendarIcon />
             </IconButton>
 
-            <IconButton
-                aria-label="delete"
-                onClick={onLogout}
-            >
+            <IconButton aria-label="delete" onClick={onLogout}>
                 <LogoutIcon />
             </IconButton>
         </>
@@ -326,7 +352,15 @@ const App: React.FC = () => {
     if (loggedInView === LoggedInView.SESSION_PICKER) {
         return (
             <>
-                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
+
+                <Box
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                    }}
+                >
                     <Box
                         sx={{
                             width: '784px',
@@ -350,9 +384,15 @@ const App: React.FC = () => {
 
     return (
         <DndProvider backend={dndBackend}>
-            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden' }}>
-                <Box sx={{ width: '820px', display: 'flex', justifyContent: 'center' }}>
-
+            <Box
+                sx={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                }}
+            >
+                <Box sx={{ width: '800px', display: 'flex', justifyContent: 'center' }}>
                     {/* LEFT */}
 
                     <Box
@@ -372,10 +412,7 @@ const App: React.FC = () => {
                         >
                             <DropTarget status={LipStatus.LIVE}>
                                 {prepareItems(items, LipStatus.LIVE).map((item) => (
-                                    <DragItem
-                                        key={item.id}
-                                        item={item}
-                                    >
+                                    <DragItem key={item.id} item={item}>
                                         <SongLip {...item} />
                                     </DragItem>
                                 ))}
@@ -390,14 +427,13 @@ const App: React.FC = () => {
                                 height: `calc(100dvh - ${START_FIELD_HEIGHT}px)`,
                                 bgcolor: 'background.paper',
                                 overflow: 'scroll',
+                                borderLeft: '1px solid pink',
+                                paddingLeft: '54px',
                             }}
                         >
                             <DropTarget status={LipStatus.STAGED}>
                                 {prepareItems(items, LipStatus.STAGED).map((item) => (
-                                    <DragItem
-                                        key={item.id}
-                                        item={item}
-                                    >
+                                    <DragItem key={item.id} item={item}>
                                         <SongLip {...item} />
                                     </DragItem>
                                 ))}
@@ -450,27 +486,31 @@ const App: React.FC = () => {
                                 height: `calc(100dvh - ${START_FIELD_HEIGHT}px)`,
                                 bgcolor: 'background.paper',
                                 overflow: 'scroll',
-                                border: '2px solid pink',
-                                paddingRight: '54px'
+                                borderRight: '1px solid pink',
+                                paddingRight: '54px',
                             }}
                         >
                             <DropTarget status={LipStatus.IDLE}>
                                 {prepareItems(items, LipStatus.IDLE).map((item) => (
-                                    <DragItem
-                                        key={item.id}
-                                        item={item}
-                                    >
+                                    <DragItem key={item.id} item={item}>
                                         <SongLip {...item} />
                                     </DragItem>
                                 ))}
                             </DropTarget>
                         </Box>
 
-                        <Box sx={{ position: 'absolute', left: '100%', top: '0', width: '50vw', height: '100dvh' }}>
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                left: '100%',
+                                top: '0',
+                                width: '50vw',
+                                height: '100dvh',
+                            }}
+                        >
                             <DropTarget status={LipStatus.DELETED} />
                         </Box>
                     </Box>
-
                 </Box>
             </Box>
         </DndProvider>
