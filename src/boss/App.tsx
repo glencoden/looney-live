@@ -84,7 +84,7 @@ const App: React.FC = () => {
 
     // Router
 
-    const hasLiveSessionWidth = window.innerWidth >= 800
+    const hasLiveSessionWidth = window.innerWidth >= 768
     const defaultLoggedOutView = hasLiveSessionWidth
         ? LoggedOutView.LOGIN
         : LoggedOutView.LIPS
@@ -392,7 +392,7 @@ const App: React.FC = () => {
                     overflow: 'hidden',
                 }}
             >
-                <Box sx={{ width: '800px', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ width: '768px', display: 'flex', justifyContent: 'center' }}>
                     {/* LEFT */}
 
                     <Box
