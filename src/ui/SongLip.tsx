@@ -12,7 +12,7 @@ import { TSong } from '../types/TSong.ts'
 import formatDistance from 'date-fns/formatDistance'
 import { de } from 'date-fns/locale'
 
-export const SONG_LIP_WIDTH = 350
+export const SONG_LIP_WIDTH = 334
 
 const getTimeDistance = (date: Date): string => {
     return formatDistance(new Date(date), new Date(), { addSuffix: true, locale: de })
